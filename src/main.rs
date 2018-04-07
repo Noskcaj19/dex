@@ -1,19 +1,23 @@
+#![feature(iterator_flatten)]
+
 #[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate serde_derive;
+extern crate rustbox;
 extern crate serenity;
 extern crate toml;
 
 use failure::Error;
 
+use rustbox::RustBox;
 use serenity::prelude::*;
-use serenity::model::channel::Message;
-use serenity::model::gateway::Ready;
 
 use std::env;
 
 mod errors;
+mod event;
+mod ui;
 
 use errors::*;
 
@@ -21,22 +25,6 @@ use errors::*;
 struct Config {
     token: String,
 }
-
-struct Handler;
-
-impl EventHandler for Handler {
-    fn message(&self, _: Context, msg: Message) {
-        println!(">> {}", msg.content);
-    }
-
-    // Called when discord responds READY
-    fn ready(&self, _: Context, ready: Ready) {
-        println!("{} connected!", ready.user.name);
-        main_loop();
-    }
-}
-
-fn main_loop() {}
 
 fn load_config() -> Result<Config, Error> {
     use std::fs::File;
@@ -53,7 +41,30 @@ fn load_config() -> Result<Config, Error> {
 fn run() -> Result<(), Error> {
     let config = load_config()?;
 
-    let mut client = match Client::new(&config.token, Handler) {
+    let rustbox = match RustBox::init(Default::default()) {
+        Result::Ok(v) => v,
+        Result::Err(e) => panic!("{}", e),
+    };
+
+    let message_area = ui::layout::Rect::new(5, 0, rustbox.width() - 10, rustbox.height() - 5);
+    let mut messages = ui::messages::Messages::new();
+
+    messages.add_msg("Hello, World!".to_owned());
+    messages.render(&message_area, &rustbox);
+
+    rustbox.present();
+
+    loop {
+        match rustbox.poll_event(false) {
+            Ok(rustbox::Event::KeyEvent(key)) => match key {
+                rustbox::Key::Char('q') => return Ok(()),
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+
+    let mut client = match Client::new(&config.token, event::Handler) {
         Ok(client) => client,
         Err(err) => return Err(InternalSerenityError::from(err))?,
     };
