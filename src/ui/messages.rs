@@ -2,6 +2,8 @@ use rustbox::{self, Color, RustBox};
 use serenity::model::channel;
 use std::borrow::Cow;
 
+const LEFT_PADDING: usize = 12;
+
 pub struct Messages {
     pub messages: Vec<channel::Message>,
 }
@@ -42,9 +44,20 @@ impl Messages {
 
         let mut y = area.height - 1;
         for message in unfolded_msgs.iter().rev() {
-            for line in message.content.lines().rev() {
+            let lines: Vec<_> = message.content.lines().rev().collect();
+            for (i, line) in lines.iter().enumerate() {
+                if i == (lines.len() - 1) {
+                    rustbox.print(
+                        area.x,
+                        y + area.y,
+                        rustbox::RB_NORMAL,
+                        Color::Default,
+                        Color::Default,
+                        &format!("{}:", message.author.name),
+                    );
+                }
                 rustbox.print(
-                    area.x,
+                    LEFT_PADDING + area.x,
                     y + area.y,
                     rustbox::RB_NORMAL,
                     Color::Default,
