@@ -3,15 +3,18 @@ use serenity::model::channel;
 use std::borrow::Cow;
 
 const LEFT_PADDING: usize = 12;
+const RIGHT_PADDING: usize = 12;
 
 pub struct Messages {
     pub messages: Vec<channel::Message>,
+    timestamp_fmt: String,
 }
 
 impl Messages {
-    pub fn new() -> Messages {
+    pub fn new(timestamp_fmt: String) -> Messages {
         Messages {
             messages: Vec::new(),
+            timestamp_fmt,
         }
     }
 
@@ -37,7 +40,12 @@ impl Messages {
         for mut msg in &mut unfolded_msgs {
             let wrapped_lines: Vec<String> = msg.content
                 .lines()
-                .map(|line| Self::wrap(line, area.width).join("\n"))
+                .map(|line| {
+                    Self::wrap(
+                        line,
+                        area.width.saturating_sub(RIGHT_PADDING + LEFT_PADDING),
+                    ).join("\n")
+                })
                 .collect();
             msg.content = wrapped_lines.join("\n");
         }
@@ -54,6 +62,21 @@ impl Messages {
                         Color::Default,
                         Color::Default,
                         &format!("{}:", message.author.name),
+                    );
+
+                    rustbox.print(
+                        area.x + area.width - RIGHT_PADDING,
+                        y + area.y,
+                        rustbox::RB_NORMAL,
+                        Color::Default,
+                        Color::Default,
+                        &format!(
+                            "{}",
+                            message
+                                .timestamp
+                                .with_timezone(&::chrono::offset::Local)
+                                .format(&self.timestamp_fmt)
+                        ),
                     );
                 }
                 rustbox.print(

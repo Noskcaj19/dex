@@ -6,6 +6,7 @@ extern crate failure;
 extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
+extern crate chrono;
 extern crate rustbox;
 extern crate serenity;
 extern crate toml;
@@ -33,6 +34,12 @@ lazy_static! {
 #[derive(Debug, Clone, Deserialize)]
 struct Config {
     token: String,
+    #[serde(default = "timestamp_default")]
+    timestamp_fmt: String,
+}
+
+fn timestamp_default() -> String {
+    "%I:%_M".to_string()
 }
 
 fn load_config() -> Result<Config, Error> {
@@ -66,7 +73,7 @@ fn run() -> Result<(), Error> {
     let shard_manager = client.shard_manager.clone();
 
     let message_area = ui::layout::Rect::new(0, 5, rustbox.width(), rustbox.height() - 10);
-    let mut messages = ui::messages::Messages::new();
+    let mut messages = ui::messages::Messages::new(config.timestamp_fmt);
 
     let rustbox = Arc::new(rustbox);
     let rustbox_event_loop = rustbox.clone();
