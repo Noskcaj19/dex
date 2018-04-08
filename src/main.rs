@@ -65,7 +65,7 @@ fn run() -> Result<(), Error> {
 
     let shard_manager = client.shard_manager.clone();
 
-    let message_area = ui::layout::Rect::new(0, 0, rustbox.width(), rustbox.height());
+    let message_area = ui::layout::Rect::new(0, 5, rustbox.width(), rustbox.height() - 10);
     let mut messages = ui::messages::Messages::new();
 
     let rustbox = Arc::new(rustbox);
