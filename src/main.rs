@@ -39,7 +39,7 @@ struct Config {
 }
 
 fn timestamp_default() -> String {
-    "%I:%_M".to_string()
+    "%-I:%-M".to_string()
 }
 
 fn load_config() -> Result<Config, Error> {
