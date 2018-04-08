@@ -1,8 +1,9 @@
 use rustbox::{self, Color, RustBox};
+use serenity::model::channel;
 use std::borrow::Cow;
 
 pub struct Messages {
-    pub messages: Vec<String>,
+    pub messages: Vec<channel::Message>,
 }
 
 impl Messages {
@@ -12,7 +13,7 @@ impl Messages {
         }
     }
 
-    pub fn add_msg(&mut self, msg: String) {
+    pub fn add_msg(&mut self, msg: channel::Message) {
         self.messages.push(msg);
     }
 
@@ -30,19 +31,18 @@ impl Messages {
 
         self.messages.drain(0..msg_diff);
 
-        let unfolded_msgs: Vec<_> = self.messages
-            .iter()
-            .map(|msg| {
-                msg.lines()
-                    .map(|line| Self::wrap(line, area.width))
-                    .flatten()
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        let mut unfolded_msgs = self.messages.clone();
+        for mut msg in &mut unfolded_msgs {
+            let wrapped_lines: Vec<String> = msg.content
+                .lines()
+                .map(|line| Self::wrap(line, area.width).join("\n"))
+                .collect();
+            msg.content = wrapped_lines.join("\n");
+        }
 
         let mut y = area.height - 1;
         for message in unfolded_msgs.iter().rev() {
-            for line in message.iter().rev() {
+            for line in message.content.lines().rev() {
                 rustbox.print(
                     area.x,
                     y + area.y,

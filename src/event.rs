@@ -11,7 +11,7 @@ impl EventHandler for Handler {
         ::MESSAGE_CHANNEL
             .lock()
             .unwrap()
-            .send(NewMessage(msg.content))
+            .send(NewMessage(msg))
             .unwrap();
     }
 
