@@ -42,7 +42,7 @@ impl Messages {
 
         let mut y = area.height - 1;
         for message in unfolded_msgs.iter().rev() {
-            for line in message {
+            for line in message.iter().rev() {
                 rustbox.print(
                     area.x,
                     y + area.y,
