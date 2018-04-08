@@ -2,11 +2,17 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
+use communication::ChannelMessage::NewMessage;
+
 pub struct Handler;
 
 impl EventHandler for Handler {
     fn message(&self, _: Context, msg: Message) {
-        println!(">> {}", msg.content);
+        ::MESSAGE_CHANNEL
+            .lock()
+            .unwrap()
+            .send(NewMessage(msg.content))
+            .unwrap();
     }
 
     // Called when discord responds READY

@@ -4,6 +4,8 @@
 extern crate failure;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate lazy_static;
 extern crate rustbox;
 extern crate serenity;
 extern crate toml;
@@ -14,12 +16,19 @@ use rustbox::RustBox;
 use serenity::prelude::*;
 
 use std::env;
+use std::sync::{mpsc, Arc, Mutex};
 
+mod communication;
 mod errors;
 mod event;
 mod ui;
 
 use errors::*;
+
+lazy_static! {
+    static ref MESSAGE_CHANNEL: Arc<Mutex<mpsc::Sender<communication::ChannelMessage>>> =
+        Arc::new(Mutex::new(mpsc::channel().0));
+}
 
 #[derive(Debug, Clone, Deserialize)]
 struct Config {
@@ -46,36 +55,64 @@ fn run() -> Result<(), Error> {
         Result::Err(e) => panic!("{}", e),
     };
 
-    let message_area = ui::layout::Rect::new(5, 0, rustbox.width() - 10, rustbox.height() - 5);
-    let mut messages = ui::messages::Messages::new();
-
-    messages.add_msg("Hello, World!".to_owned());
-    messages.render(&message_area, &rustbox);
-
-    rustbox.present();
-
-    loop {
-        match rustbox.poll_event(false) {
-            Ok(rustbox::Event::KeyEvent(key)) => match key {
-                rustbox::Key::Char('q') => return Ok(()),
-                _ => {}
-            },
-            _ => {}
-        }
-    }
+    let (tx, rx) = mpsc::channel();
+    *MESSAGE_CHANNEL.lock().unwrap() = tx;
 
     let mut client = match Client::new(&config.token, event::Handler) {
         Ok(client) => client,
         Err(err) => return Err(InternalSerenityError::from(err))?,
     };
 
-    // Start new shard
-    println!("Starting...");
+    let shard_manager = client.shard_manager.clone();
 
-    match client.start() {
-        Ok(_) => Ok(()),
-        Err(err) => return Err(InternalSerenityError::from(err))?,
+    let message_area = ui::layout::Rect::new(0, 0, rustbox.width(), rustbox.height());
+    let mut messages = ui::messages::Messages::new();
+
+    let rustbox = Arc::new(rustbox);
+    let rustbox_event_loop = rustbox.clone();
+    std::thread::spawn(move || loop {
+        match rustbox_event_loop.poll_event(false) {
+            Ok(rustbox::Event::KeyEvent(key)) => match key {
+                rustbox::Key::Char('q') => {
+                    MESSAGE_CHANNEL
+                        .lock()
+                        .unwrap()
+                        .send(communication::ChannelMessage::ShutdownAll)
+                        .unwrap();
+                    break;
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+    });
+
+    std::thread::spawn(move || {
+        // Start new shard
+        match client.start() {
+            Ok(_) => {}
+            Err(_) => {}
+            // Err(err) => return Err(InternalSerenityError::from(err)).unwrap(),
+        };
+    });
+
+    loop {
+        use communication::ChannelMessage::*;
+        match rx.recv() {
+            Ok(ShutdownAll) => {
+                shard_manager.lock().shutdown_all();
+                break;
+            }
+            Ok(NewMessage(msg)) => {
+                messages.add_msg(msg);
+            }
+            _ => {}
+        }
+        rustbox.clear();
+        messages.render(&message_area, &rustbox);
+        rustbox.present();
     }
+    Ok(())
 }
 
 fn main() {
