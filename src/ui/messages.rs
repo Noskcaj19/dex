@@ -19,23 +19,24 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     )
 }
 
-fn colorize_name(message: &channel::Message) -> String {
+fn colorize_nick(message: &channel::Message) -> String {
+    let name = ::utils::member(&message)
+        .and_then(|member| member.nick)
+        .unwrap_or_else(|| message.author.name.to_string());
     match ::utils::member(&message).and_then(|member| member.colour()) {
         Some(colour) => {
             if *::SUPPORTS_TRUECOLOR {
                 format!(
                     "{}{}{}",
                     color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-                    ::utils::member(&message)
-                        .and_then(|member| member.nick)
-                        .unwrap_or_else(|| message.author.name.to_string()),
+                    name,
                     style::Reset,
                 )
             } else {
                 format!(
                     "{}{}{}",
                     color::Fg(color_to_8bit(colour)),
-                    message.author.name,
+                    name,
                     style::Reset,
                 )
             }
@@ -93,7 +94,7 @@ impl Messages {
                         screen,
                         "{}{}",
                         cursor::Goto(area.x as u16, (y + area.y) as u16),
-                        format!("{}:", colorize_name(&message))
+                        format!("{}:", colorize_nick(&message))
                     ).unwrap();
 
                     write!(
