@@ -26,6 +26,7 @@ mod communication;
 mod errors;
 mod event;
 mod ui;
+mod utils;
 
 use errors::*;
 

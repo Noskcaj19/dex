@@ -1,7 +1,7 @@
 use serenity::model::channel;
 use std::borrow::Cow;
 use std::io::{Stdout, Write};
-use termion::cursor;
+use termion::{color, cursor, style};
 
 const LEFT_PADDING: usize = 12;
 const RIGHT_PADDING: usize = 12;
@@ -9,6 +9,18 @@ const RIGHT_PADDING: usize = 12;
 pub struct Messages {
     pub messages: Vec<channel::Message>,
     timestamp_fmt: String,
+}
+
+fn colorize_name(message: &channel::Message) -> String {
+    match ::utils::member(&message).and_then(|member| member.colour()) {
+        Some(colour) => format!(
+            "{}{}{}",
+            color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
+            message.author.name,
+            style::Reset
+        ),
+        None => message.author.name.to_string(),
+    }
 }
 
 impl Messages {
@@ -60,7 +72,7 @@ impl Messages {
                         screen,
                         "{}{}",
                         cursor::Goto(area.x as u16, (y + area.y) as u16),
-                        format!("{}:", message.author.name)
+                        format!("{}:", colorize_name(&message))
                     );
 
                     write!(
