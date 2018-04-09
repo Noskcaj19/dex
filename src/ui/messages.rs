@@ -1,6 +1,7 @@
-use rustbox::{self, Color, RustBox};
 use serenity::model::channel;
 use std::borrow::Cow;
+use std::io::{Stdout, Write};
+use termion::cursor;
 
 const LEFT_PADDING: usize = 12;
 const RIGHT_PADDING: usize = 12;
@@ -30,7 +31,7 @@ impl Messages {
             .collect()
     }
 
-    pub fn render(&mut self, area: &super::layout::Rect, rustbox: &RustBox) {
+    pub fn render(&mut self, area: &super::layout::Rect, screen: &mut Stdout) {
         let rough_msg_count = area.height;
         let msg_diff = self.messages.len().saturating_sub(rough_msg_count);
 
@@ -55,37 +56,31 @@ impl Messages {
             let lines: Vec<_> = message.content.lines().rev().collect();
             for (i, line) in lines.iter().enumerate() {
                 if i == (lines.len() - 1) {
-                    rustbox.print(
-                        area.x,
-                        y + area.y,
-                        rustbox::RB_NORMAL,
-                        Color::Default,
-                        Color::Default,
-                        &format!("{}:", message.author.name),
+                    write!(
+                        screen,
+                        "{}{}",
+                        cursor::Goto(area.x as u16, (y + area.y) as u16),
+                        format!("{}:", message.author.name)
                     );
 
-                    rustbox.print(
-                        area.x + area.width - RIGHT_PADDING,
-                        y + area.y,
-                        rustbox::RB_NORMAL,
-                        Color::Default,
-                        Color::Default,
-                        &format!(
-                            "{}",
-                            message
-                                .timestamp
-                                .with_timezone(&::chrono::offset::Local)
-                                .format(&self.timestamp_fmt)
+                    write!(
+                        screen,
+                        "{}{}",
+                        cursor::Goto(
+                            (area.x + area.width - RIGHT_PADDING) as u16,
+                            (y + area.y) as u16
                         ),
+                        message
+                            .timestamp
+                            .with_timezone(&::chrono::offset::Local)
+                            .format(&self.timestamp_fmt)
                     );
                 }
-                rustbox.print(
-                    LEFT_PADDING + area.x,
-                    y + area.y,
-                    rustbox::RB_NORMAL,
-                    Color::Default,
-                    Color::Default,
-                    line,
+                write!(
+                    screen,
+                    "{}{}",
+                    cursor::Goto((LEFT_PADDING + area.x) as u16, (y + area.y) as u16),
+                    line
                 );
                 if y == 0 {
                     return;

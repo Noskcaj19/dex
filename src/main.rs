@@ -7,14 +7,17 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 extern crate chrono;
-extern crate rustbox;
 extern crate serenity;
+extern crate termion;
 extern crate toml;
 
 use failure::Error;
 
-use rustbox::RustBox;
 use serenity::prelude::*;
+use std::io::{stdin, stdout, Write};
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
+use termion::screen::AlternateScreen;
 
 use std::env;
 use std::sync::{mpsc, Arc, Mutex};
@@ -57,10 +60,13 @@ fn load_config() -> Result<Config, Error> {
 fn run() -> Result<(), Error> {
     let config = load_config()?;
 
-    let rustbox = match RustBox::init(Default::default()) {
-        Result::Ok(v) => v,
-        Result::Err(e) => panic!("{}", e),
-    };
+    if !termion::is_tty(&stdout()) {
+        println!("This requires an interactive tty");
+        return Ok(());
+    }
+
+    let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
+    let term_size = termion::terminal_size().unwrap();
 
     let (tx, rx) = mpsc::channel();
     *MESSAGE_CHANNEL.lock().unwrap() = tx;
@@ -72,15 +78,14 @@ fn run() -> Result<(), Error> {
 
     let shard_manager = client.shard_manager.clone();
 
-    let message_area = ui::layout::Rect::new(0, 5, rustbox.width(), rustbox.height() - 10);
+    let message_area = ui::layout::Rect::new(0, 5, term_size.0 as usize, term_size.1 as usize - 10);
     let mut messages = ui::messages::Messages::new(config.timestamp_fmt);
 
-    let rustbox = Arc::new(rustbox);
-    let rustbox_event_loop = rustbox.clone();
     std::thread::spawn(move || loop {
-        match rustbox_event_loop.poll_event(false) {
-            Ok(rustbox::Event::KeyEvent(key)) => match key {
-                rustbox::Key::Char('q') => {
+        use termion::event::Key::*;
+        for c in stdin().keys() {
+            match c {
+                Ok(Char('q')) => {
                     MESSAGE_CHANNEL
                         .lock()
                         .unwrap()
@@ -89,8 +94,7 @@ fn run() -> Result<(), Error> {
                     break;
                 }
                 _ => {}
-            },
-            _ => {}
+            }
         }
     });
 
@@ -105,6 +109,9 @@ fn run() -> Result<(), Error> {
 
     loop {
         use communication::ChannelMessage::*;
+        write!(screen, "{}", termion::clear::All);
+        messages.render(&message_area, &mut screen);
+        screen.flush().unwrap();
         match rx.recv() {
             Ok(ShutdownAll) => {
                 shard_manager.lock().shutdown_all();
@@ -115,9 +122,6 @@ fn run() -> Result<(), Error> {
             }
             _ => {}
         }
-        rustbox.clear();
-        messages.render(&message_area, &rustbox);
-        rustbox.present();
     }
     Ok(())
 }
