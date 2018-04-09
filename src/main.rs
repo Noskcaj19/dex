@@ -14,7 +14,7 @@ extern crate toml;
 use failure::Error;
 
 use serenity::prelude::*;
-use std::io::{stdin, stdout, Stdout, Write};
+use std::io::{stdin, stdout, Write};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
