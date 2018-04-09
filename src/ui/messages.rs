@@ -26,7 +26,9 @@ fn colorize_name(message: &channel::Message) -> String {
                 format!(
                     "{}{}{}",
                     color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-                    message.author.name,
+                    ::utils::member(&message)
+                        .and_then(|member| member.nick)
+                        .unwrap_or_else(|| message.author.name.to_string()),
                     style::Reset,
                 )
             } else {
