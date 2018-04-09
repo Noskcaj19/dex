@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use std::io::{Stdout, Write};
 use termion::{color, cursor, style};
 
-const LEFT_PADDING: usize = 12;
-const RIGHT_PADDING: usize = 12;
+const LEFT_PADDING: usize = 20;
+const RIGHT_PADDING: usize = 6;
 
 pub struct Messages {
     pub messages: Vec<channel::Message>,
