@@ -20,7 +20,7 @@ use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
 
 use std::env;
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{mpsc, Arc};
 
 mod communication;
 mod errors;
@@ -91,14 +91,12 @@ fn run() -> Result<(), Error> {
     };
 
     let (tx, rx) = mpsc::channel();
-    *MESSAGE_CHANNEL.lock().unwrap() = tx;
+    *MESSAGE_CHANNEL.lock() = tx;
 
     let mut client = match Client::new(&config.token, event::Handler) {
         Ok(client) => client,
         Err(err) => return Err(InternalSerenityError::from(err))?,
     };
-
-    let shard_manager = client.shard_manager.clone();
 
     let message_area = ui::layout::Rect::new(
         0,
@@ -115,7 +113,6 @@ fn run() -> Result<(), Error> {
                 Ok(Char('q')) => {
                     MESSAGE_CHANNEL
                         .lock()
-                        .unwrap()
                         .send(communication::ChannelMessage::ShutdownAll)
                         .unwrap();
                     break;
@@ -125,6 +122,7 @@ fn run() -> Result<(), Error> {
         }
     });
 
+    let shard_manager = client.shard_manager.clone();
     std::thread::spawn(move || {
         // Start new shard
         match client.start() {

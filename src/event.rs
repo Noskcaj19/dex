@@ -8,11 +8,7 @@ pub struct Handler;
 
 impl EventHandler for Handler {
     fn message(&self, _: Context, msg: Message) {
-        ::MESSAGE_CHANNEL
-            .lock()
-            .unwrap()
-            .send(NewMessage(msg))
-            .unwrap();
+        ::MESSAGE_CHANNEL.lock().send(NewMessage(msg)).unwrap();
     }
 
     // Called when discord responds READY
