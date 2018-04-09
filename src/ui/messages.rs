@@ -92,7 +92,7 @@ impl Messages {
                         "{}{}",
                         cursor::Goto(area.x as u16, (y + area.y) as u16),
                         format!("{}:", colorize_name(&message))
-                    );
+                    ).unwrap();
 
                     write!(
                         screen,
@@ -105,14 +105,14 @@ impl Messages {
                             .timestamp
                             .with_timezone(&::chrono::offset::Local)
                             .format(&self.timestamp_fmt)
-                    );
+                    ).unwrap();
                 }
                 write!(
                     screen,
                     "{}{}",
                     cursor::Goto((LEFT_PADDING + area.x) as u16, (y + area.y) as u16),
                     line
-                );
+                ).unwrap();
                 if y == 0 {
                     return;
                 }

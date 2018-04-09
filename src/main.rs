@@ -115,7 +115,7 @@ fn run() -> Result<(), Error> {
 
     loop {
         use communication::ChannelMessage::*;
-        write!(screen, "{}", termion::clear::All);
+        write!(screen, "{}", termion::clear::All).unwrap();
         messages.render(&message_area, &mut screen);
         screen.flush().unwrap();
         match rx.recv() {
