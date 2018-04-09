@@ -1,5 +1,6 @@
 use serenity::model::channel;
-use serenity::model::id::ChannelId;
+use serenity::model::id::{ChannelId, UserId};
+use serenity::utils::Colour;
 use termion::{color, cursor, style};
 
 use std::borrow::Cow;
@@ -17,35 +18,10 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     )
 }
 
-fn colorize_nick(message: &channel::Message) -> String {
-    let name = ::utils::member(&message)
-        .and_then(|member| member.nick)
-        .unwrap_or_else(|| message.author.name.to_string());
-    match ::utils::member(&message).and_then(|member| member.colour()) {
-        Some(colour) => {
-            if *::SUPPORTS_TRUECOLOR {
-                format!(
-                    "{}{}{}",
-                    color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-                    name,
-                    style::Reset,
-                )
-            } else {
-                format!(
-                    "{}{}{}",
-                    color::Fg(color_to_8bit(colour)),
-                    name,
-                    style::Reset,
-                )
-            }
-        }
-        None => message.author.name.to_string(),
-    }
-}
-
 pub struct Messages {
     pub messages: HashMap<ChannelId, Vec<channel::Message>>,
     timestamp_fmt: String,
+    nickname_cache: HashMap<UserId, (String, Option<Colour>)>,
 }
 
 impl Messages {
@@ -53,6 +29,7 @@ impl Messages {
         Messages {
             messages: HashMap::new(),
             timestamp_fmt,
+            nickname_cache: HashMap::new(),
         }
     }
 
@@ -69,23 +46,69 @@ impl Messages {
             .collect()
     }
 
+    fn colorize_nick(&mut self, message: &channel::Message) -> String {
+        let entry = self.nickname_cache.entry(message.author.id);
+        use std::collections::hash_map::Entry::*;
+        let (nick, colour) = match entry {
+            Occupied(o) => o.into_mut(),
+            Vacant(v) => {
+                if let Some(member) = ::utils::member(&message) {
+                    v.insert((
+                        member
+                            .nick
+                            .clone()
+                            .unwrap_or(message.author.name.to_owned()),
+                        member.colour(),
+                    ))
+                } else {
+                    v.insert((message.author.name.to_owned(), None))
+                }
+            }
+        };
+
+        match colour {
+            Some(colour) => {
+                if *::SUPPORTS_TRUECOLOR {
+                    format!(
+                        "{}{}{}",
+                        color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
+                        nick,
+                        style::Reset,
+                    )
+                } else {
+                    format!(
+                        "{}{}{}",
+                        color::Fg(color_to_8bit(*colour)),
+                        nick,
+                        style::Reset,
+                    )
+                }
+            }
+            None => message.author.name.to_string(),
+        }
+    }
+
     pub fn render(&mut self, area: &super::layout::Rect, screen: &mut Stdout) {
         let context = ::CONTEXT.read();
         if context.guild.is_none() || context.channel.is_none() {
             return;
         }
 
-        let messages = match self.messages.get_mut(&context.channel.unwrap()) {
-            Some(messages) => messages,
-            None => return,
-        };
+        let mut unfolded_msgs;
+        {
+            let messages = match self.messages.get_mut(&context.channel.unwrap()) {
+                Some(messages) => messages,
+                None => return,
+            };
 
-        let rough_msg_count = area.height;
-        let msg_diff = messages.len().saturating_sub(rough_msg_count);
+            let rough_msg_count = area.height;
+            let msg_diff = messages.len().saturating_sub(rough_msg_count);
 
-        messages.drain(0..msg_diff);
+            messages.drain(0..msg_diff);
 
-        let mut unfolded_msgs = messages.clone();
+            unfolded_msgs = messages.clone();
+        }
+
         for mut msg in &mut unfolded_msgs {
             let wrapped_lines: Vec<String> = msg.content
                 .lines()
@@ -108,7 +131,7 @@ impl Messages {
                         screen,
                         "{}{}",
                         cursor::Goto(area.x as u16, (y + area.y) as u16),
-                        format!("{}:", colorize_nick(&message))
+                        format!("{}:", self.colorize_nick(&message))
                     ).unwrap();
 
                     write!(
