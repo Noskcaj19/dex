@@ -1,4 +1,4 @@
-#![feature(iterator_flatten)]
+#![feature(entry_or_default)]
 
 #[macro_use]
 extern crate failure;
@@ -14,7 +14,7 @@ extern crate toml;
 use failure::Error;
 
 use serenity::prelude::*;
-use std::io::{stdin, stdout, Write};
+use std::io::{stdin, stdout, Stdout, Write};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
@@ -33,6 +33,7 @@ use errors::*;
 lazy_static! {
     static ref MESSAGE_CHANNEL: Arc<Mutex<mpsc::Sender<communication::ChannelMessage>>> =
         Arc::new(Mutex::new(mpsc::channel().0));
+    static ref CONTEXT: Arc<RwLock<Context>> = Arc::new(RwLock::new(Context::default()));
     static ref SUPPORTS_TRUECOLOR: bool = {
         std::env::var("COLORTERM")
             .map(|colorterm| colorterm.to_lowercase() == "truecolor".to_string())
@@ -40,11 +41,20 @@ lazy_static! {
     };
 }
 
+#[derive(Debug, Default)]
+struct Context {
+    pub guild: Option<serenity::model::id::GuildId>,
+    pub channel: Option<serenity::model::id::ChannelId>,
+    pub terminal_size: (u16, u16),
+}
+
 #[derive(Debug, Clone, Deserialize)]
 struct Config {
     token: String,
     #[serde(default = "timestamp_default")]
     timestamp_fmt: String,
+    guild: Option<serenity::model::id::GuildId>,
+    channel: Option<serenity::model::id::ChannelId>,
 }
 
 fn timestamp_default() -> String {
@@ -72,7 +82,13 @@ fn run() -> Result<(), Error> {
     }
 
     let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
-    let term_size = termion::terminal_size().unwrap();
+    let terminal_size = termion::terminal_size().unwrap();
+
+    *CONTEXT.write() = Context {
+        guild: config.guild,
+        channel: config.channel,
+        terminal_size,
+    };
 
     let (tx, rx) = mpsc::channel();
     *MESSAGE_CHANNEL.lock().unwrap() = tx;
@@ -84,7 +100,12 @@ fn run() -> Result<(), Error> {
 
     let shard_manager = client.shard_manager.clone();
 
-    let message_area = ui::layout::Rect::new(0, 5, term_size.0 as usize, term_size.1 as usize - 10);
+    let message_area = ui::layout::Rect::new(
+        0,
+        5,
+        terminal_size.0 as usize,
+        terminal_size.1 as usize - 10,
+    );
     let mut messages = ui::messages::Messages::new(config.timestamp_fmt);
 
     std::thread::spawn(move || loop {

@@ -1,15 +1,13 @@
 use serenity::model::channel;
-use std::borrow::Cow;
-use std::io::{Stdout, Write};
+use serenity::model::id::ChannelId;
 use termion::{color, cursor, style};
+
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::io::{Stdout, Write};
 
 const LEFT_PADDING: usize = 20;
 const RIGHT_PADDING: usize = 6;
-
-pub struct Messages {
-    pub messages: Vec<channel::Message>,
-    timestamp_fmt: String,
-}
 
 fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     color::AnsiValue::rgb(
@@ -45,16 +43,22 @@ fn colorize_nick(message: &channel::Message) -> String {
     }
 }
 
+pub struct Messages {
+    pub messages: HashMap<ChannelId, Vec<channel::Message>>,
+    timestamp_fmt: String,
+}
+
 impl Messages {
     pub fn new(timestamp_fmt: String) -> Messages {
         Messages {
-            messages: Vec::new(),
+            messages: HashMap::new(),
             timestamp_fmt,
         }
     }
 
     pub fn add_msg(&mut self, msg: channel::Message) {
-        self.messages.push(msg);
+        let messages = self.messages.entry(msg.channel_id).or_default();
+        messages.push(msg);
     }
 
     fn wrap<'a>(string: &'a str, length: usize) -> Vec<Cow<'a, str>> {
@@ -66,12 +70,22 @@ impl Messages {
     }
 
     pub fn render(&mut self, area: &super::layout::Rect, screen: &mut Stdout) {
+        let context = ::CONTEXT.read();
+        if context.guild.is_none() || context.channel.is_none() {
+            return;
+        }
+
+        let messages = match self.messages.get_mut(&context.channel.unwrap()) {
+            Some(messages) => messages,
+            None => return,
+        };
+
         let rough_msg_count = area.height;
-        let msg_diff = self.messages.len().saturating_sub(rough_msg_count);
+        let msg_diff = messages.len().saturating_sub(rough_msg_count);
 
-        self.messages.drain(0..msg_diff);
+        messages.drain(0..msg_diff);
 
-        let mut unfolded_msgs = self.messages.clone();
+        let mut unfolded_msgs = messages.clone();
         for mut msg in &mut unfolded_msgs {
             let wrapped_lines: Vec<String> = msg.content
                 .lines()
