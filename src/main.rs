@@ -33,6 +33,11 @@ use errors::*;
 lazy_static! {
     static ref MESSAGE_CHANNEL: Arc<Mutex<mpsc::Sender<communication::ChannelMessage>>> =
         Arc::new(Mutex::new(mpsc::channel().0));
+    static ref SUPPORTS_TRUECOLOR: bool = {
+        std::env::var("COLORTERM")
+            .map(|colorterm| colorterm.to_lowercase() == "truecolor".to_string())
+            .unwrap_or(false)
+    };
 }
 
 #[derive(Debug, Clone, Deserialize)]

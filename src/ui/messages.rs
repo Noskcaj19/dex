@@ -11,14 +11,33 @@ pub struct Messages {
     timestamp_fmt: String,
 }
 
+fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
+    color::AnsiValue::rgb(
+        (colour.r() as u16 * 5 / 255) as u8,
+        (colour.g() as u16 * 5 / 255) as u8,
+        (colour.b() as u16 * 5 / 255) as u8,
+    )
+}
+
 fn colorize_name(message: &channel::Message) -> String {
     match ::utils::member(&message).and_then(|member| member.colour()) {
-        Some(colour) => format!(
-            "{}{}{}",
-            color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-            message.author.name,
-            style::Reset
-        ),
+        Some(colour) => {
+            if *::SUPPORTS_TRUECOLOR {
+                format!(
+                    "{}{}{}",
+                    color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
+                    message.author.name,
+                    style::Reset,
+                )
+            } else {
+                format!(
+                    "{}{}{}",
+                    color::Fg(color_to_8bit(colour)),
+                    message.author.name,
+                    style::Reset,
+                )
+            }
+        }
         None => message.author.name.to_string(),
     }
 }
