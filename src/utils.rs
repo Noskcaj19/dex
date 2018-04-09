@@ -6,17 +6,6 @@ use serenity::{self, model::id::*, CACHE};
 
 use std::sync::Arc;
 
-pub fn get_user_color(guild_id: &GuildId, user_id: &UserId) -> Option<serenity::utils::Colour> {
-    use serenity::{model::id::*, CACHE};
-    let cache = CACHE.read();
-
-    let guild = cache.guilds.get(guild_id)?.read();
-    let member = guild.members.get(user_id)?;
-
-    let primary_role = member.roles.get(0)?;
-    Some(guild.roles.get(primary_role).unwrap().colour)
-}
-
 pub fn guild(message: &Message) -> Option<Arc<RwLock<Guild>>> {
     guild_id(message).and_then(|guild_id| CACHE.read().guild(guild_id))
 }
