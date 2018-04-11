@@ -68,27 +68,28 @@ impl Messages {
 
         match colour {
             Some(colour) => {
-                if *::SUPPORTS_TRUECOLOR {
-                    format!(
-                        "{}{}{}",
-                        color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-                        nick,
-                        style::Reset,
-                    )
-                } else {
-                    format!(
-                        "{}{}{}",
-                        color::Fg(color_to_8bit(*colour)),
-                        nick,
-                        style::Reset,
-                    )
-                }
+                // if *::SUPPORTS_TRUECOLOR {
+                //     format!(
+                //         "{}{}{}",
+                //         color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
+                //         nick,
+                //         style::Reset,
+                //     )
+                // } else {
+                format!(
+                    "{}{}{}",
+                    color::Fg(color_to_8bit(*colour)),
+                    nick,
+                    style::Reset,
+                )
+                // }
             }
             None => message.author.name.to_string(),
         }
     }
 
-    pub fn render(&mut self, area: &super::layout::Rect, screen: &mut Stdout) {
+    pub fn render(&mut self, area: &::models::layout::Rect, screen: &mut Stdout) {
+        return; /*
         let context = ::CONTEXT.read();
         if context.guild.is_none() || context.channel.is_none() {
             return;
@@ -158,6 +159,6 @@ impl Messages {
                 }
                 y -= 1;
             }
-        }
+        }*/
     }
 }

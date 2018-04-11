@@ -1,18 +1,20 @@
+use std::sync::{mpsc, Arc};
+
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
-use communication::ChannelMessage::NewMessage;
+use models::event::Event::{self, *};
 
-pub struct Handler;
+pub struct Handler(pub Arc<Mutex<mpsc::Sender<Event>>>);
 
 impl EventHandler for Handler {
     fn message(&self, _: Context, msg: Message) {
-        ::MESSAGE_CHANNEL.lock().send(NewMessage(msg)).unwrap();
+        self.0.lock().send(NewMessage(msg)).unwrap();
     }
 
     // Called when discord responds READY
     fn ready(&self, _: Context, ready: Ready) {
-        println!("{} connected!", ready.user.name);
+        self.0.lock().send(DiscordReady).unwrap();
     }
 }
