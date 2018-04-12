@@ -1,5 +1,5 @@
 mod event_handler;
-mod utils;
+pub mod utils;
 
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
@@ -32,9 +32,7 @@ impl DiscordClient {
             client.start();
         });
 
-        Ok(DiscordClient {
-            shard_manager,
-        })
+        Ok(DiscordClient { shard_manager })
     }
 
     pub fn shutdown(&self) {

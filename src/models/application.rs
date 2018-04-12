@@ -24,7 +24,7 @@ impl Application {
         let preferences = Preferences::load()?;
         let (event_channel, events) = mpsc::channel();
 
-        let view = View::new(event_channel.clone());
+        let view = View::new(preferences.clone(), event_channel.clone());
 
         let discord_client = DiscordClient::start(&preferences.token(), event_channel.clone())?;
 
@@ -41,7 +41,8 @@ impl Application {
 
     pub fn run(&mut self) -> Result<(), Error> {
         loop {
-            // TODO: Render
+            self.view.present();
+
             if !self.wait_for_event() {
                 debug!("Exiting event loop");
                 break;

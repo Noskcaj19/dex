@@ -52,7 +52,7 @@ impl Messages {
         let (nick, colour) = match entry {
             Occupied(o) => o.into_mut(),
             Vacant(v) => {
-                if let Some(member) = ::utils::member(&message) {
+                if let Some(member) = ::discord::utils::member(&message) {
                     v.insert((
                         member
                             .nick

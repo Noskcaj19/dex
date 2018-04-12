@@ -1,11 +1,11 @@
-use std::io::{self, stdin, stdout, Error, Stdin, Stdout, Write};
+use std::io::{self, stdout, Error, Stdout, Write};
 
-use std::sync::mpsc::{Receiver, Sender, SyncSender};
-use std::sync::Arc;
+use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 
+use serenity::prelude::Mutex;
+
 use termion::async_stdin;
-use termion::input::Keys;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::screen::AlternateScreen;
@@ -13,13 +13,13 @@ use termion::screen::AlternateScreen;
 use models::event::Event;
 
 pub struct Terminal {
-    pub screen: AlternateScreen<RawTerminal<Stdout>>,
+    pub screen: Mutex<AlternateScreen<RawTerminal<Stdout>>>,
 }
 
 impl Terminal {
     pub fn new() -> Result<Terminal, Error> {
         Ok(Terminal {
-            screen: AlternateScreen::from(stdout().into_raw_mode()?),
+            screen: Mutex::new(AlternateScreen::from(stdout().into_raw_mode()?)),
         })
     }
 
@@ -40,10 +40,10 @@ impl Terminal {
 
 impl Write for Terminal {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.screen.write(buf)
+        self.screen.lock().write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.screen.flush()
+        self.screen.lock().flush()
     }
 }

@@ -14,8 +14,6 @@ extern crate log;
 mod discord;
 mod errors;
 mod models;
-mod ui;
-mod utils;
 mod view;
 
 pub use failure::Error;
