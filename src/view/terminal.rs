@@ -28,7 +28,6 @@ impl Terminal {
             let mut keys = async_stdin().keys();
             loop {
                 if let Some(Ok(key)) = keys.next() {
-                    trace!("Key: {:?}", key);
                     event_channel.send(Event::Keypress(key)).unwrap();
                 } else if killswitch.try_recv().is_ok() {
                     trace!("Input loop received killsignal");

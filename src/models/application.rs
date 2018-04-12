@@ -6,10 +6,12 @@ use std::sync::mpsc::{self, Receiver, Sender};
 
 use super::event::Event;
 use super::preferences::Preferences;
+use discord::DiscordClient;
 use view::View;
 
 pub struct Application {
     pub view: View,
+    pub discord_client: DiscordClient,
     pub preferences: Preferences,
     pub current_guild: Option<GuildId>,
     pub current_channel: Option<ChannelId>,
@@ -24,8 +26,11 @@ impl Application {
 
         let view = View::new(event_channel.clone());
 
+        let discord_client = DiscordClient::start(&preferences.token(), event_channel.clone())?;
+
         Ok(Application {
             view,
+            discord_client,
             preferences,
             current_guild: None,
             current_channel: None,
@@ -52,7 +57,7 @@ impl Application {
         trace!("Event: {:?}", event);
         match event {
             Ok(Event::Keypress(key)) => match key {
-                Key::Char('q') => return false,
+                Key::Char('q') | Key::Ctrl('c') => return false,
                 _ => {}
             },
             _ => {}

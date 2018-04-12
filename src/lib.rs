@@ -11,8 +11,8 @@ extern crate toml;
 #[macro_use]
 extern crate log;
 
+mod discord;
 mod errors;
-mod event;
 mod models;
 mod ui;
 mod utils;

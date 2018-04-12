@@ -1,8 +1,8 @@
-use serenity::CACHE;
 use serenity::model::channel::{Channel, Message};
 use serenity::model::guild::{Guild, Member};
 use serenity::model::id::*;
 use serenity::prelude::RwLock;
+use serenity::CACHE;
 
 use std::sync::Arc;
 
