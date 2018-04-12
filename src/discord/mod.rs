@@ -29,7 +29,7 @@ impl DiscordClient {
 
         let shard_manager = client.shard_manager.clone();
         thread::spawn(move || {
-            client.start();
+            client.start().unwrap();
         });
 
         Ok(DiscordClient { shard_manager })
