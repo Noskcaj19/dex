@@ -41,7 +41,6 @@ impl Application {
 
     pub fn run(&mut self) -> Result<(), Error> {
         loop {
-            debug!("Loop");
             // TODO: Render
             if !self.wait_for_event() {
                 debug!("Exiting event loop");
