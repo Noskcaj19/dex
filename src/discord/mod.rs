@@ -1,4 +1,5 @@
 mod event_handler;
+mod utils;
 
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
@@ -14,7 +15,6 @@ use errors;
 use failure::Error;
 
 pub struct DiscordClient {
-    // client: Mutex<Client>,
     shard_manager: Arc<Mutex<ShardManager>>,
 }
 

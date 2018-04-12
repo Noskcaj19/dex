@@ -1,4 +1,5 @@
 mod terminal;
+mod messages;
 
 use std::sync::mpsc::{self, Sender, SyncSender};
 use std::sync::Arc;

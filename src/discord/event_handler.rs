@@ -7,7 +7,6 @@ use serenity::prelude::*;
 use models::event::Event::{self, *};
 
 pub struct Handler(pub Arc<Mutex<mpsc::Sender<Event>>>);
-// pub struct Handler;
 
 impl EventHandler for Handler {
     // Called when a message is received
