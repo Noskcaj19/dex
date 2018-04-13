@@ -1,5 +1,5 @@
 use serenity::model::channel;
-use serenity::model::id::UserId;
+use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
 use termion::{color, cursor, style};
 
@@ -59,6 +59,23 @@ impl Messages {
 
     pub fn add_msg(&mut self, msg: MessageItem) {
         self.messages.push(msg);
+    }
+
+    pub fn delete_msg(&mut self, channel_id: ChannelId, message_id: MessageId) {
+        let mut msg_index = None;
+        for (i, msg) in self.messages.iter().enumerate() {
+            match msg {
+                MessageItem::DiscordMessage(msg) => {
+                    if msg.channel_id == channel_id && msg.id == message_id {
+                        msg_index = Some(i);
+                        break;
+                    }
+                }
+            }
+        }
+        if let Some(index) = msg_index {
+            self.messages.remove(index);
+        }
     }
 
     fn colorize_nick(&mut self, message: &channel::Message) -> String {

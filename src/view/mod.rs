@@ -9,6 +9,8 @@ use models::event::Event;
 use models::message::MessageItem;
 use models::preferences::Preferences;
 
+use serenity::model::id::{ChannelId, MessageId};
+
 use termion::event::Key;
 
 use failure::Error;
@@ -51,6 +53,10 @@ impl View {
 
     pub fn new_msg(&mut self, msg: MessageItem) {
         self.message_view.add_msg(msg)
+    }
+
+    pub fn delete_msg(&mut self, channel_id: ChannelId, message_id: MessageId) {
+        self.message_view.delete_msg(channel_id, message_id)
     }
 
     pub fn key_press(&mut self, key: Key) -> Result<(), Error> {

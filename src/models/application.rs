@@ -63,6 +63,9 @@ impl Application {
                 }
             },
             Ok(Event::NewMessage(msg)) => self.view.new_msg(MessageItem::DiscordMessage(msg)),
+            Ok(Event::MessageDelete(channel_id, message_id)) => {
+                self.view.delete_msg(channel_id, message_id)
+            }
             _ => {}
         }
         return true;

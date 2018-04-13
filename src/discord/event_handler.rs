@@ -2,6 +2,7 @@ use std::sync::{mpsc, Arc};
 
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
+use serenity::model::id::{ChannelId, MessageId};
 use serenity::prelude::*;
 
 use models::event::Event::{self, *};
@@ -12,6 +13,10 @@ impl EventHandler for Handler {
     // Called when a message is received
     fn message(&self, _: Context, msg: Message) {
         self.0.lock().send(NewMessage(msg)).unwrap();
+    }
+
+    fn message_delete(&self, _: Context, channel: ChannelId, message: MessageId) {
+        self.0.lock().send(MessageDelete(channel, message)).unwrap()
     }
 
     // Called when discord responds READY
