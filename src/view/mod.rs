@@ -3,13 +3,10 @@ mod terminal;
 
 use std::io::{self, Write};
 use std::sync::mpsc::{self, Sender, SyncSender};
-use std::sync::Arc;
 
 use models::event::Event;
 use models::message::MessageItem;
 use models::preferences::Preferences;
-
-use failure::Error;
 
 pub struct View {
     pub terminal: terminal::Terminal,

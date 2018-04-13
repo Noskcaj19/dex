@@ -7,10 +7,6 @@ use serenity;
 pub struct HomeDirError;
 
 #[derive(Fail, Debug)]
-#[fail(display = "Must be run in a interactive terminal")]
-pub struct NonInteractiveTty;
-
-#[derive(Fail, Debug)]
 #[fail(display = "Error originating from Serentity:\n{}", _0)]
 pub struct InternalSerenityError(pub String);
 

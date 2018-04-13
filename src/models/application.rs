@@ -1,5 +1,4 @@
 use failure::Error;
-use serenity;
 use serenity::model::id::{ChannelId, GuildId};
 
 use std::sync::mpsc::{self, Receiver, Sender};

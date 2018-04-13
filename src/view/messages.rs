@@ -1,5 +1,5 @@
 use serenity::model::channel;
-use serenity::model::id::{ChannelId, UserId};
+use serenity::model::id::UserId;
 use serenity::utils::Colour;
 use termion::{color, cursor, style};
 

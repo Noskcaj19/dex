@@ -15,7 +15,7 @@ impl EventHandler for Handler {
     }
 
     // Called when discord responds READY
-    fn ready(&self, _: Context, ready: Ready) {
+    fn ready(&self, _: Context, _: Ready) {
         self.0.lock().send(DiscordReady).unwrap();
     }
 }
