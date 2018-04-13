@@ -19,6 +19,13 @@ impl EventHandler for Handler {
         self.0.lock().send(MessageDelete(channel, message)).unwrap()
     }
 
+    fn message_delete_bulk(&self, _: Context, channel: ChannelId, messages: Vec<MessageId>) {
+        self.0
+            .lock()
+            .send(MessageDeleteBulk(channel, messages))
+            .unwrap()
+    }
+
     // Called when discord responds READY
     fn ready(&self, _: Context, _: Ready) {
         self.0.lock().send(DiscordReady).unwrap();

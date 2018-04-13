@@ -59,6 +59,10 @@ impl View {
         self.message_view.delete_msg(channel_id, message_id)
     }
 
+    pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: Vec<MessageId>) {
+        self.message_view.delete_msg_bulk(channel_id, message_ids)
+    }
+
     pub fn key_press(&mut self, key: Key) -> Result<(), Error> {
         self.input_view.key_press(key)
     }

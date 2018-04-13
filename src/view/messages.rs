@@ -78,6 +78,14 @@ impl Messages {
         }
     }
 
+    pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: Vec<MessageId>) {
+        self.messages.retain(|msg| match msg {
+            MessageItem::DiscordMessage(msg) => {
+                !(msg.channel_id == channel_id) && !message_ids.contains(&msg.id)
+            }
+        });
+    }
+
     fn colorize_nick(&mut self, message: &channel::Message) -> String {
         let entry = self.nickname_cache.entry(message.author.id);
         use std::collections::hash_map::Entry::*;

@@ -7,6 +7,7 @@ pub enum Event {
     ShutdownAll,
     NewMessage(channel::Message),
     MessageDelete(ChannelId, MessageId),
+    MessageDeleteBulk(ChannelId, Vec<MessageId>),
     DiscordReady,
     Keypress(Key),
     UserCommand(String),
