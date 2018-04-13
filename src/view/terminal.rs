@@ -48,8 +48,9 @@ impl Terminal {
                 } else if killswitch.try_recv().is_ok() {
                     trace!("Input loop received killsignal");
                     break;
+                } else {
+                    thread::sleep(Duration::from_millis(50));
                 }
-                thread::sleep(Duration::from_millis(50));
             }
         });
     }
