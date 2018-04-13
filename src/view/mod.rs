@@ -6,21 +6,14 @@ use std::io::{self, Write};
 use std::sync::mpsc::{self, Sender, SyncSender};
 
 use models::event::Event;
-use models::message::MessageItem;
 use models::preferences::Preferences;
-
-use serenity::model::id::{ChannelId, MessageId};
-
-use termion::event::Key;
-
-use failure::Error;
 
 pub struct View {
     pub terminal: terminal::Terminal,
     event_channel: Sender<Event>,
     event_listener_killswitch: SyncSender<()>,
-    message_view: messages::Messages,
-    input_view: input::Input,
+    pub message_view: messages::Messages,
+    pub input_view: input::Input,
 }
 
 impl View {
@@ -49,22 +42,6 @@ impl View {
         self.message_view.render(&mut self.terminal, terminal_size)?;
         self.input_view.render(&mut self.terminal, terminal_size);
         self.terminal.flush()
-    }
-
-    pub fn new_msg(&mut self, msg: MessageItem) {
-        self.message_view.add_msg(msg)
-    }
-
-    pub fn delete_msg(&mut self, channel_id: ChannelId, message_id: MessageId) {
-        self.message_view.delete_msg(channel_id, message_id)
-    }
-
-    pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: Vec<MessageId>) {
-        self.message_view.delete_msg_bulk(channel_id, message_ids)
-    }
-
-    pub fn key_press(&mut self, key: Key) -> Result<(), Error> {
-        self.input_view.key_press(key)
     }
 }
 

@@ -59,16 +59,18 @@ impl Application {
             Ok(Event::Keypress(key)) => match key {
                 Key::Ctrl('c') | Key::Ctrl('d') => return false,
                 key => {
-                    let _ = self.view.key_press(key);
+                    let _ = self.view.input_view.key_press(key);
                 }
             },
-            Ok(Event::NewMessage(msg)) => self.view.new_msg(MessageItem::DiscordMessage(msg)),
+            Ok(Event::NewMessage(msg)) => self.view
+                .message_view
+                .add_msg(MessageItem::DiscordMessage(msg)),
             Ok(Event::MessageDelete(channel_id, message_id)) => {
-                self.view.delete_msg(channel_id, message_id)
+                self.view.message_view.delete_msg(channel_id, message_id)
             }
-            Ok(Event::MessageDeleteBulk(channel_id, message_ids)) => {
-                self.view.delete_msg_bulk(channel_id, message_ids)
-            }
+            Ok(Event::MessageDeleteBulk(channel_id, message_ids)) => self.view
+                .message_view
+                .delete_msg_bulk(channel_id, message_ids),
             _ => {}
         }
         return true;
