@@ -1,10 +1,9 @@
 use std::io::{self, stdout, Error, Stdout, Write};
 
+use std::cell::Cell;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::time::Duration;
-
-use serenity::prelude::Mutex;
 
 use termion;
 use termion::async_stdin;
@@ -15,7 +14,7 @@ use termion::screen::AlternateScreen;
 use models::event::Event;
 
 pub struct Terminal {
-    pub screen: Mutex<AlternateScreen<RawTerminal<Stdout>>>,
+    pub screen: Cell<AlternateScreen<RawTerminal<Stdout>>>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -27,7 +26,7 @@ pub struct TerminalSize {
 impl Terminal {
     pub fn new() -> Result<Terminal, Error> {
         Ok(Terminal {
-            screen: Mutex::new(AlternateScreen::from(stdout().into_raw_mode()?)),
+            screen: Cell::new(AlternateScreen::from(stdout().into_raw_mode()?)),
         })
     }
 
@@ -58,10 +57,10 @@ impl Terminal {
 
 impl Write for Terminal {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.screen.lock().write(buf)
+        self.screen.get_mut().write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.screen.lock().flush()
+        self.screen.get_mut().flush()
     }
 }
