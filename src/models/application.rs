@@ -7,6 +7,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use super::event::Event;
 use super::preferences::Preferences;
 use discord::DiscordClient;
+use models::message::MessageItem;
 use view::View;
 
 pub struct Application {
@@ -41,7 +42,7 @@ impl Application {
 
     pub fn run(&mut self) -> Result<(), Error> {
         loop {
-            self.view.present();
+            self.view.present()?;
 
             if !self.wait_for_event() {
                 debug!("Exiting event loop");
@@ -60,6 +61,7 @@ impl Application {
                 Key::Char('q') | Key::Ctrl('c') => return false,
                 _ => {}
             },
+            Ok(Event::NewMessage(msg)) => self.view.new_msg(MessageItem::DiscordMessage(msg)),
             _ => {}
         }
         return true;

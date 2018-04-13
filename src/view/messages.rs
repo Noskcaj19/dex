@@ -5,10 +5,19 @@ use termion::{color, cursor, style};
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::io::{Stdout, Write};
+use std::env;
+use std::io::{self, Write};
+
+use discord::utils;
+use models::message::MessageItem;
+use view::terminal::{Terminal, TerminalSize};
 
 const LEFT_PADDING: usize = 20;
-const RIGHT_PADDING: usize = 6;
+const RIGHT_PADDING: usize = 5;
+const TIME_PADDING: usize = 3;
+const LEFT_START: usize = 0;
+const TOP_START: usize = 5;
+const BOTTOM_DIFF: usize = 10;
 
 fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     color::AnsiValue::rgb(
@@ -18,32 +27,38 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     )
 }
 
+fn wrap<'a>(string: &'a str, length: usize) -> Vec<Cow<'a, str>> {
+    string
+        .as_bytes()
+        .chunks(length)
+        .map(String::from_utf8_lossy)
+        .collect()
+}
+
 pub struct Messages {
-    pub messages: HashMap<ChannelId, Vec<channel::Message>>,
+    pub messages: Vec<MessageItem>,
     timestamp_fmt: String,
+    truecolor: bool,
     nickname_cache: HashMap<UserId, (String, Option<Colour>)>,
 }
 
 impl Messages {
     pub fn new(timestamp_fmt: String) -> Messages {
+        let truecolor = match env::var("COLORTERM") {
+            Ok(term) => term.to_lowercase() == "truecolor",
+            Err(_) => false,
+        };
+
         Messages {
-            messages: HashMap::new(),
+            messages: Vec::new(),
             timestamp_fmt,
+            truecolor,
             nickname_cache: HashMap::new(),
         }
     }
 
-    pub fn add_msg(&mut self, msg: channel::Message) {
-        let messages = self.messages.entry(msg.channel_id).or_default();
-        messages.push(msg);
-    }
-
-    fn wrap<'a>(string: &'a str, length: usize) -> Vec<Cow<'a, str>> {
-        string
-            .as_bytes()
-            .chunks(length)
-            .map(String::from_utf8_lossy)
-            .collect()
+    pub fn add_msg(&mut self, msg: MessageItem) {
+        self.messages.push(msg);
     }
 
     fn colorize_nick(&mut self, message: &channel::Message) -> String {
@@ -52,7 +67,7 @@ impl Messages {
         let (nick, colour) = match entry {
             Occupied(o) => o.into_mut(),
             Vacant(v) => {
-                if let Some(member) = ::discord::utils::member(&message) {
+                if let Some(member) = utils::member(&message) {
                     v.insert((
                         member
                             .nick
@@ -68,97 +83,94 @@ impl Messages {
 
         match colour {
             Some(colour) => {
-                // if *::SUPPORTS_TRUECOLOR {
-                //     format!(
-                //         "{}{}{}",
-                //         color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-                //         nick,
-                //         style::Reset,
-                //     )
-                // } else {
-                format!(
-                    "{}{}{}",
-                    color::Fg(color_to_8bit(*colour)),
-                    nick,
-                    style::Reset,
-                )
-                // }
+                if self.truecolor {
+                    format!(
+                        "{}{}{}",
+                        color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
+                        nick,
+                        style::Reset,
+                    )
+                } else {
+                    format!(
+                        "{}{}{}",
+                        color::Fg(color_to_8bit(*colour)),
+                        nick,
+                        style::Reset,
+                    )
+                }
             }
             None => message.author.name.to_string(),
         }
     }
 
-    pub fn render(&mut self, area: &::models::layout::Rect, screen: &mut Stdout) {
-        return; /*
-        let context = ::CONTEXT.read();
-        if context.guild.is_none() || context.channel.is_none() {
-            return;
-        }
+    pub fn render(&mut self, screen: &mut Terminal, size: TerminalSize) -> Result<(), io::Error> {
+        let rough_msg_count = size.height;
+        let msg_diff = self.messages.len().saturating_sub(rough_msg_count);
 
-        let mut unfolded_msgs;
-        {
-            let messages = match self.messages.get_mut(&context.channel.unwrap()) {
-                Some(messages) => messages,
-                None => return,
-            };
+        self.messages.drain(0..msg_diff);
 
-            let rough_msg_count = area.height;
-            let msg_diff = messages.len().saturating_sub(rough_msg_count);
+        let mut messages = self.messages.clone();
 
-            messages.drain(0..msg_diff);
-
-            unfolded_msgs = messages.clone();
-        }
-
-        for mut msg in &mut unfolded_msgs {
-            let wrapped_lines: Vec<String> = msg.content
-                .lines()
-                .map(|line| {
-                    Self::wrap(
-                        line,
-                        area.width.saturating_sub(RIGHT_PADDING + LEFT_PADDING),
-                    ).join("\n")
-                })
-                .collect();
-            msg.content = wrapped_lines.join("\n");
-        }
-
-        let mut y = area.height - 1;
-        for message in unfolded_msgs.iter().rev() {
-            let lines: Vec<_> = message.content.lines().rev().collect();
-            for (i, line) in lines.iter().enumerate() {
-                if i == (lines.len() - 1) {
-                    write!(
-                        screen,
-                        "{}{}",
-                        cursor::Goto(area.x as u16, (y + area.y) as u16),
-                        format!("{}:", self.colorize_nick(&message))
-                    ).unwrap();
-
-                    write!(
-                        screen,
-                        "{}{}",
-                        cursor::Goto(
-                            (area.x + area.width - RIGHT_PADDING) as u16,
-                            (y + area.y) as u16
-                        ),
-                        message
-                            .timestamp
-                            .with_timezone(&::chrono::offset::Local)
-                            .format(&self.timestamp_fmt)
-                    ).unwrap();
+        let mut y = size.height - BOTTOM_DIFF - 1;
+        for mut msg in &mut messages.iter_mut().rev() {
+            match msg {
+                MessageItem::DiscordMessage(msg) => {
+                    self.render_discord_msg(msg, size, screen, &mut y)?;
                 }
+            }
+        }
+        Ok(())
+    }
+
+    fn render_discord_msg(
+        &mut self,
+        msg: &mut channel::Message,
+        size: TerminalSize,
+        screen: &mut Terminal,
+        y: &mut usize,
+    ) -> Result<(), io::Error> {
+        let wrapped_lines: Vec<String> = msg.content
+            .lines()
+            .map(|line| {
+                wrap(
+                    line,
+                    size.width
+                        .saturating_sub(RIGHT_PADDING + LEFT_PADDING + LEFT_START + TIME_PADDING),
+                ).join("\n")
+            })
+            .collect();
+        msg.content = wrapped_lines.join("\n");
+
+        let lines: Vec<_> = msg.content.lines().rev().collect();
+        for (i, line) in lines.iter().enumerate() {
+            if i == (lines.len() - 1) {
                 write!(
                     screen,
                     "{}{}",
-                    cursor::Goto((LEFT_PADDING + area.x) as u16, (y + area.y) as u16),
-                    line
-                ).unwrap();
-                if y == 0 {
-                    return;
-                }
-                y -= 1;
+                    cursor::Goto((LEFT_START) as u16, (*y + TOP_START) as u16),
+                    format!("{}:", self.colorize_nick(&msg))
+                )?;
+
+                write!(
+                    screen,
+                    "{}{}",
+                    cursor::Goto((size.width - RIGHT_PADDING) as u16, (*y + TOP_START) as u16),
+                    msg.timestamp
+                        .with_timezone(&::chrono::offset::Local)
+                        .format(&self.timestamp_fmt)
+                )?;
             }
-        }*/
+            write!(
+                screen,
+                "{}{}",
+                cursor::Goto((LEFT_PADDING + LEFT_START) as u16, (*y + TOP_START) as u16),
+                line
+            )?;
+            if *y == 0 {
+                return Ok(());
+            }
+            *y -= 1;
+        }
+        Ok(())
     }
 }

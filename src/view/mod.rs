@@ -1,12 +1,15 @@
 mod messages;
 mod terminal;
 
-use std::io::Write;
+use std::io::{self, Write};
 use std::sync::mpsc::{self, Sender, SyncSender};
 use std::sync::Arc;
 
 use models::event::Event;
+use models::message::MessageItem;
 use models::preferences::Preferences;
+
+use failure::Error;
 
 pub struct View {
     pub terminal: terminal::Terminal,
@@ -32,9 +35,16 @@ impl View {
         }
     }
 
-    pub fn present(&mut self) {
-        write!(self.terminal, "{}", ::termion::clear::All).unwrap();
-        self.terminal.flush().unwrap();
+    pub fn present(&mut self) -> Result<(), io::Error> {
+        write!(self.terminal, "{}", ::termion::clear::All)?;
+        let terminal_size = self.terminal.size();
+
+        self.message_view.render(&mut self.terminal, terminal_size)?;
+        self.terminal.flush()
+    }
+
+    pub fn new_msg(&mut self, msg: MessageItem) {
+        self.message_view.add_msg(msg)
     }
 }
 
