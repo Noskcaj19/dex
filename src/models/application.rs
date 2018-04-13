@@ -57,8 +57,10 @@ impl Application {
         trace!("Event: {:?}", event);
         match event {
             Ok(Event::Keypress(key)) => match key {
-                Key::Char('q') | Key::Ctrl('c') => return false,
-                _ => {}
+                Key::Ctrl('c') | Key::Ctrl('d') => return false,
+                key => {
+                    let _ = self.view.key_press(key);
+                }
             },
             Ok(Event::NewMessage(msg)) => self.view.new_msg(MessageItem::DiscordMessage(msg)),
             _ => {}

@@ -1,3 +1,4 @@
+mod input;
 mod messages;
 mod terminal;
 
@@ -8,11 +9,16 @@ use models::event::Event;
 use models::message::MessageItem;
 use models::preferences::Preferences;
 
+use termion::event::Key;
+
+use failure::Error;
+
 pub struct View {
     pub terminal: terminal::Terminal,
     event_channel: Sender<Event>,
     event_listener_killswitch: SyncSender<()>,
     message_view: messages::Messages,
+    input_view: input::Input,
 }
 
 impl View {
@@ -23,12 +29,14 @@ impl View {
         terminal.listen(event_channel.clone(), killswitch_rx);
 
         let message_view = messages::Messages::new(preferences.timestamp_fmt());
+        let input_view = input::Input::new(event_channel.clone());
 
         View {
             terminal,
             event_channel,
             event_listener_killswitch: killswitch_tx,
             message_view,
+            input_view,
         }
     }
 
@@ -37,11 +45,16 @@ impl View {
         let terminal_size = self.terminal.size();
 
         self.message_view.render(&mut self.terminal, terminal_size)?;
+        self.input_view.render(&mut self.terminal, terminal_size);
         self.terminal.flush()
     }
 
     pub fn new_msg(&mut self, msg: MessageItem) {
         self.message_view.add_msg(msg)
+    }
+
+    pub fn key_press(&mut self, key: Key) -> Result<(), Error> {
+        self.input_view.key_press(key)
     }
 }
 

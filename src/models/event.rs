@@ -7,4 +7,5 @@ pub enum Event {
     NewMessage(channel::Message),
     DiscordReady,
     Keypress(Key),
+    UserCommand(String),
 }
