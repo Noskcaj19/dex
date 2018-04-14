@@ -16,6 +16,7 @@ pub struct Application {
     pub current_guild: Option<GuildId>,
     pub current_channel: Option<ChannelId>,
     pub event_channel: Sender<Event>,
+    pub ready: bool,
     events: Receiver<Event>,
 }
 
@@ -35,6 +36,7 @@ impl Application {
             current_guild: None,
             current_channel: None,
             event_channel,
+            ready: false,
             events,
         })
     }
@@ -58,6 +60,7 @@ impl Application {
         let event = self.events.recv();
         trace!("Event: {:?}", event);
         match event {
+            Ok(Event::DiscordReady) => self.ready = true,
             Ok(Event::Keypress(key)) => match key {
                 Key::Ctrl('c') | Key::Ctrl('d') => {
                     self.discord_client.shutdown();
@@ -78,7 +81,8 @@ impl Application {
                 .message_view
                 .delete_msg_bulk(channel_id, message_ids),
             Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(update),
-            _ => {}
+            Ok(Event::UserCommand(_cmd)) => {}
+            Err(_) => {}
         }
         return true;
     }
