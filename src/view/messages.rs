@@ -172,7 +172,7 @@ impl Messages {
         screen: &mut Terminal,
         y: &mut usize,
     ) -> Result<bool, io::Error> {
-        let wrapped_lines: Vec<String> = msg.content
+        let wrapped_lines: Vec<String> = msg.content_safe()
             .lines()
             .map(|line| {
                 fill(
