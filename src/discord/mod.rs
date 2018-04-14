@@ -36,6 +36,7 @@ impl DiscordClient {
     }
 
     pub fn shutdown(&self) {
+        debug!("Shutting down");
         self.shard_manager.lock().shutdown_all();
     }
 }

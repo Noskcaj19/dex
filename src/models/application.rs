@@ -59,11 +59,15 @@ impl Application {
         trace!("Event: {:?}", event);
         match event {
             Ok(Event::Keypress(key)) => match key {
-                Key::Ctrl('c') | Key::Ctrl('d') => return false,
+                Key::Ctrl('c') | Key::Ctrl('d') => {
+                    self.discord_client.shutdown();
+                    return false;
+                }
                 key => {
                     let _ = self.view.input_view.key_press(key);
                 }
             },
+            Ok(Event::ShutdownAll) => self.discord_client.shutdown(),
             Ok(Event::NewMessage(msg)) => self.view
                 .message_view
                 .add_msg(MessageItem::DiscordMessage(msg)),
