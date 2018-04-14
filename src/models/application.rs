@@ -40,6 +40,8 @@ impl Application {
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
+        self.load_messages();
+
         loop {
             self.view.present()?;
 
@@ -75,5 +77,20 @@ impl Application {
             _ => {}
         }
         return true;
+    }
+
+    pub fn load_messages(&mut self) {
+        use serenity::builder::GetMessages;
+
+        let num_messages = self.view.terminal.size().height;
+        let retriever = GetMessages::default().limit(num_messages as u64);
+
+        if let Some(channel) = self.preferences.previous_channel() {
+            for message in channel.messages(|_| retriever).unwrap().iter().rev() {
+                self.view
+                    .message_view
+                    .add_msg(MessageItem::DiscordMessage(message.clone()));
+            }
+        }
     }
 }
