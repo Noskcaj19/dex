@@ -61,14 +61,16 @@ impl Input {
         match key {
             Key::Backspace | Key::Delete => {
                 let _ = self.text.pop();
-                Ok(())
             }
-            Key::Char('\n') => self.submit(),
+            Key::Char('\n') => {
+                self.submit()?;
+            }
             Key::Char(ch) => {
                 self.text.push(ch);
-                Ok(())
             }
-            _ => Ok(()),
+            Key::Ctrl('u') => self.text.clear(),
+            _ => {}
         }
+        Ok(())
     }
 }
