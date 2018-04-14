@@ -95,6 +95,7 @@ impl Application {
                 .message_view
                 .delete_msg_bulk(channel_id, message_ids),
             Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(update),
+            Ok(Event::UserMessage(_cmd)) => {}
             Ok(Event::UserCommand(_cmd)) => {}
             Err(err) => error!("{:?}", err),
         }

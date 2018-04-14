@@ -12,8 +12,14 @@ use failure::Error;
 const BOTTOM_START: usize = 3;
 const SIDE_PADDING: usize = 3;
 
+enum State {
+    Message,
+    Command,
+}
+
 pub struct Input {
     text: String,
+    state: State,
     event_channel: Sender<Event>,
 }
 
@@ -21,6 +27,7 @@ impl Input {
     pub fn new(event_channel: Sender<Event>) -> Input {
         Input {
             text: String::new(),
+            state: State::Message,
             event_channel,
         }
     }
@@ -51,8 +58,12 @@ impl Input {
     }
 
     pub fn submit(&mut self) -> Result<(), Error> {
-        self.event_channel
-            .send(Event::UserCommand(self.text.clone()))?;
+        let event = match self.state {
+            State::Message => Event::UserMessage(self.text.clone()),
+            State::Command => Event::UserCommand(self.text[1..].to_owned()),
+        };
+        self.state = State::Message;
+        self.event_channel.send(event)?;
         self.text.clear();
         Ok(())
     }
@@ -60,12 +71,19 @@ impl Input {
     pub fn key_press(&mut self, key: Key) -> Result<(), Error> {
         match key {
             Key::Backspace | Key::Delete => {
+                if self.text.len() == 1 {
+                    self.state = State::Message
+                }
                 let _ = self.text.pop();
             }
+            Key::Esc => self.state = State::Message,
             Key::Char('\n') => {
                 self.submit()?;
             }
             Key::Char(ch) => {
+                if ch == ':' && self.text.len() == 0 {
+                    self.state = State::Command
+                }
                 self.text.push(ch);
             }
             Key::Ctrl('u') => self.text.clear(),

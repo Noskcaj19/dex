@@ -12,5 +12,6 @@ pub enum Event {
     MessageUpdateEvent(MessageUpdateEvent),
     DiscordReady,
     Keypress(Key),
+    UserMessage(String),
     UserCommand(String),
 }
