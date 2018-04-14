@@ -172,7 +172,14 @@ impl Messages {
         screen: &mut Terminal,
         y: &mut usize,
     ) -> Result<bool, io::Error> {
-        let wrapped_lines: Vec<String> = msg.content_safe()
+        // Show an indicator if an attachement is present
+        let content = if msg.attachments.len() > 0 {
+            "📎 ".to_owned()+&msg.content_safe()
+        } else {
+            msg.content_safe()
+        };
+
+        let wrapped_lines: Vec<String> = content
             .lines()
             .map(|line| {
                 fill(
@@ -183,6 +190,7 @@ impl Messages {
             })
             .collect();
         msg.content = wrapped_lines.join("\n");
+
 
         let lines: Vec<_> = msg.content.lines().rev().collect();
         for (i, line) in lines.iter().enumerate() {
