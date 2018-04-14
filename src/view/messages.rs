@@ -3,7 +3,7 @@ use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
 use termion::{color, cursor, style};
-use unicode_segmentation::UnicodeSegmentation;
+use textwrap::fill;
 
 use std::collections::HashMap;
 use std::env;
@@ -26,15 +26,6 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
         (colour.g() as u16 * 5 / 255) as u8,
         (colour.b() as u16 * 5 / 255) as u8,
     )
-}
-
-fn wrap<'a>(string: &'a str, length: usize) -> Vec<String> {
-    string
-        .graphemes(true)
-        .collect::<Vec<_>>()
-        .chunks(length)
-        .map(|chunks| chunks.join(""))
-        .collect()
 }
 
 pub struct Messages {
@@ -184,11 +175,11 @@ impl Messages {
         let wrapped_lines: Vec<String> = msg.content
             .lines()
             .map(|line| {
-                wrap(
+                fill(
                     line,
                     size.width
                         .saturating_sub(RIGHT_PADDING + LEFT_PADDING + LEFT_START + TIME_PADDING),
-                ).join("\n")
+                )
             })
             .collect();
         msg.content = wrapped_lines.join("\n");

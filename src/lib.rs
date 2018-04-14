@@ -10,7 +10,7 @@ extern crate termion;
 extern crate toml;
 #[macro_use]
 extern crate log;
-extern crate unicode_segmentation;
+extern crate textwrap;
 
 mod discord;
 mod errors;
