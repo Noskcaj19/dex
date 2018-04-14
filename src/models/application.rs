@@ -2,6 +2,8 @@ use failure::Error;
 use serenity::model::id::{ChannelId, GuildId};
 
 use std::sync::mpsc::{self, Receiver, Sender};
+use std::thread;
+use std::time::Duration;
 
 use super::event::Event;
 use super::preferences::Preferences;
@@ -44,6 +46,13 @@ impl Application {
     pub fn run(&mut self) -> Result<(), Error> {
         self.load_messages();
 
+        while !self.ready {
+            if !self.wait_for_event() {
+                debug!("Exiting event loop");
+                return Ok(());
+            }
+        }
+
         loop {
             self.view.present()?;
 
@@ -60,7 +69,10 @@ impl Application {
         let event = self.events.recv();
         trace!("Event: {:?}", event);
         match event {
-            Ok(Event::DiscordReady) => self.ready = true,
+            Ok(Event::DiscordReady) => {
+                debug!("Discord ready");
+                self.ready = true;
+            }
             Ok(Event::Keypress(key)) => match key {
                 Key::Ctrl('c') | Key::Ctrl('d') => {
                     self.discord_client.shutdown();
