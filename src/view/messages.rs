@@ -165,7 +165,9 @@ impl Messages {
         for mut msg in &mut messages.iter_mut().rev() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {
-                    self.render_discord_msg(msg, size, screen, &mut y)?;
+                    if !self.render_discord_msg(msg, size, screen, &mut y)? {
+                        break;
+                    };
                 }
             }
         }
@@ -178,7 +180,7 @@ impl Messages {
         size: TerminalSize,
         screen: &mut Terminal,
         y: &mut usize,
-    ) -> Result<(), io::Error> {
+    ) -> Result<bool, io::Error> {
         let wrapped_lines: Vec<String> = msg.content
             .lines()
             .map(|line| {
@@ -217,10 +219,10 @@ impl Messages {
                 line
             )?;
             if *y == 0 {
-                return Ok(());
+                return Ok(false);
             }
             *y -= 1;
         }
-        Ok(())
+        Ok(true)
     }
 }
