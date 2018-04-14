@@ -67,6 +67,7 @@ impl Messages {
         for (i, msg) in self.messages.iter().enumerate() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {
+                    debug!("Deleting message: {}", message_id);
                     if msg.channel_id == channel_id && msg.id == message_id {
                         msg_index = Some(i);
                         break;
@@ -80,6 +81,14 @@ impl Messages {
     }
 
     pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: Vec<MessageId>) {
+        debug!(
+            "Bulk delete: {}",
+            message_ids
+                .iter()
+                .map(|msg_id| msg_id.0.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
         self.messages.retain(|msg| match msg {
             MessageItem::DiscordMessage(msg) => {
                 !(msg.channel_id == channel_id) && !message_ids.contains(&msg.id)
@@ -92,6 +101,7 @@ impl Messages {
             match msg {
                 MessageItem::DiscordMessage(ref mut msg) => {
                     if update.id == update.id && update.channel_id == update.channel_id {
+                        debug!("Updated message: {}", msg.id);
                         utils::update_msg(msg, update);
                         break;
                     }
