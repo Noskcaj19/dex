@@ -2,14 +2,18 @@ use failure::Error;
 use serenity::model::id::{ChannelId, GuildId};
 
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::thread;
-use std::time::Duration;
 
 use super::event::Event;
 use super::preferences::Preferences;
 use discord::DiscordClient;
 use models::message::MessageItem;
 use view::View;
+
+enum State {
+    NotReady,
+    Ready,
+    Exiting,
+}
 
 pub struct Application {
     pub view: View,
@@ -18,7 +22,7 @@ pub struct Application {
     pub current_guild: Option<GuildId>,
     pub current_channel: Option<ChannelId>,
     pub event_channel: Sender<Event>,
-    pub ready: bool,
+    state: State,
     events: Receiver<Event>,
 }
 
@@ -38,7 +42,7 @@ impl Application {
             current_guild: None,
             current_channel: None,
             event_channel,
-            ready: false,
+            state: State::NotReady,
             events,
         })
     }
@@ -46,37 +50,35 @@ impl Application {
     pub fn run(&mut self) -> Result<(), Error> {
         self.load_messages();
 
-        while !self.ready {
-            if !self.wait_for_event() {
-                debug!("Exiting event loop");
-                return Ok(());
-            }
-        }
-
         loop {
-            self.view.present()?;
-
-            if !self.wait_for_event() {
-                debug!("Exiting event loop");
-                break;
+            match self.state {
+                State::NotReady => {}
+                State::Ready => {
+                    self.view.present()?;
+                }
+                State::Exiting => {
+                    debug!("Exiting event loop");
+                    break;
+                }
             }
+            self.wait_for_event();
         }
         Ok(())
     }
 
-    pub fn wait_for_event(&mut self) -> bool {
+    pub fn wait_for_event(&mut self) {
         use termion::event::Key;
         let event = self.events.recv();
         trace!("Event: {:?}", event);
         match event {
             Ok(Event::DiscordReady) => {
                 debug!("Discord ready");
-                self.ready = true;
+                self.state = State::Ready;
             }
             Ok(Event::Keypress(key)) => match key {
                 Key::Ctrl('c') | Key::Ctrl('d') => {
                     self.discord_client.shutdown();
-                    return false;
+                    self.state = State::Exiting;
                 }
                 key => {
                     let _ = self.view.input_view.key_press(key);
@@ -96,7 +98,6 @@ impl Application {
             Ok(Event::UserCommand(_cmd)) => {}
             Err(_) => {}
         }
-        return true;
     }
 
     pub fn load_messages(&mut self) {
