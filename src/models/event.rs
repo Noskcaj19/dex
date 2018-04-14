@@ -1,4 +1,5 @@
 use serenity::model::channel;
+use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId};
 use termion::event::Key;
 
@@ -8,6 +9,7 @@ pub enum Event {
     NewMessage(channel::Message),
     MessageDelete(ChannelId, MessageId),
     MessageDeleteBulk(ChannelId, Vec<MessageId>),
+    MessageUpdateEvent(MessageUpdateEvent),
     DiscordReady,
     Keypress(Key),
     UserCommand(String),

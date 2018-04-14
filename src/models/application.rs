@@ -71,6 +71,7 @@ impl Application {
             Ok(Event::MessageDeleteBulk(channel_id, message_ids)) => self.view
                 .message_view
                 .delete_msg_bulk(channel_id, message_ids),
+            Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(update),
             _ => {}
         }
         return true;

@@ -1,4 +1,5 @@
 use serenity::model::channel;
+use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
 use termion::{color, cursor, style};
@@ -84,6 +85,19 @@ impl Messages {
                 !(msg.channel_id == channel_id) && !message_ids.contains(&msg.id)
             }
         });
+    }
+
+    pub fn update_message(&mut self, update: MessageUpdateEvent) {
+        for mut msg in self.messages.iter_mut() {
+            match msg {
+                MessageItem::DiscordMessage(ref mut msg) => {
+                    if update.id == update.id && update.channel_id == update.channel_id {
+                        utils::update_msg(msg, update);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     fn colorize_nick(&mut self, message: &channel::Message) -> String {
