@@ -51,9 +51,9 @@ impl Input {
     }
 
     pub fn submit(&mut self) -> Result<(), Error> {
-        self.text.clear();
         self.event_channel
             .send(Event::UserCommand(self.text.clone()))?;
+        self.text.clear();
         Ok(())
     }
 
