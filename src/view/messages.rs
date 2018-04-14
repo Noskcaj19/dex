@@ -92,7 +92,7 @@ impl Messages {
         for mut msg in self.messages.iter_mut() {
             match msg {
                 MessageItem::DiscordMessage(ref mut msg) => {
-                    if update.id == update.id && update.channel_id == update.channel_id {
+                    if update.id == msg.id && update.channel_id == msg.channel_id {
                         debug!("Updated message: {}", msg.id);
                         utils::update_msg(msg, update);
                         break;
