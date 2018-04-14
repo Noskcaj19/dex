@@ -3,8 +3,8 @@ use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
 use termion::{color, cursor, style};
+use unicode_segmentation::UnicodeSegmentation;
 
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
 use std::io::{self, Write};
@@ -28,11 +28,12 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     )
 }
 
-fn wrap<'a>(string: &'a str, length: usize) -> Vec<Cow<'a, str>> {
+fn wrap<'a>(string: &'a str, length: usize) -> Vec<String> {
     string
-        .as_bytes()
+        .graphemes(true)
+        .collect::<Vec<_>>()
         .chunks(length)
-        .map(String::from_utf8_lossy)
+        .map(|chunks| chunks.join(""))
         .collect()
 }
 
