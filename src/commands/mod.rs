@@ -19,10 +19,18 @@ impl CommandHandler {
             return;
         };
 
+        let args = cmd.chars().skip(1).collect::<String>();
+        let args = args.trim();
+
         match command {
             'q' => {
                 // Quit
                 self.event_channel.send(Event::ShutdownAll).unwrap()
+            }
+            'n' => {
+                // Nick
+                let new_nick = if args == "c" { None } else { Some(args) };
+                app.current_guild.map(|guild| guild.edit_nickname(new_nick));
             }
             _ => {}
         }
