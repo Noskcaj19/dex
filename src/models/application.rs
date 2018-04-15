@@ -8,6 +8,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 
 use super::event::Event;
 use super::preferences::Preferences;
+use commands::CommandHandler;
 use discord::DiscordClient;
 use helpers::signals::SignalHandler;
 use models::message::MessageItem;
@@ -27,6 +28,7 @@ pub struct Application {
     pub current_channel: Option<ChannelId>,
     pub event_channel: Sender<Event>,
     pub current_user: Option<CurrentUser>,
+    pub command_handler: CommandHandler,
     state: State,
     events: Receiver<Event>,
 }
@@ -40,6 +42,8 @@ impl Application {
 
         let view = View::new(preferences.clone(), event_channel.clone());
 
+        let command_handler = CommandHandler::new(event_channel.clone());
+
         let discord_client = DiscordClient::start(&preferences.token(), event_channel.clone())?;
 
         Ok(Application {
@@ -49,6 +53,7 @@ impl Application {
             current_channel: preferences.previous_channel(),
             preferences,
             event_channel,
+            command_handler,
             current_user: None,
             state: State::NotReady,
             events,
@@ -98,7 +103,10 @@ impl Application {
                     }
                 }
             },
-            Ok(Event::ShutdownAll) => self.discord_client.shutdown(),
+            Ok(Event::ShutdownAll) => {
+                self.discord_client.shutdown();
+                self.state = State::Exiting;
+            }
             Ok(Event::NewMessage(msg)) => {
                 match &self.current_user {
                     Some(user) if user.id != msg.author.id => {
@@ -132,7 +140,7 @@ impl Application {
                     self.send_err(format_err!("Unable to send message in current channel"))
                 }
             }
-            Ok(Event::UserCommand(_cmd)) => {}
+            Ok(Event::UserCommand(cmd)) => self.command_handler.execute(self, &cmd),
             Ok(Event::UserTyping) => {
                 if let Some(channel) = self.current_channel {
                     if let Err(err) = channel.broadcast_typing() {

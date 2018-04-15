@@ -14,6 +14,7 @@ extern crate notify_rust;
 extern crate signal;
 extern crate textwrap;
 
+mod commands;
 mod discord;
 mod errors;
 mod helpers;
