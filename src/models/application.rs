@@ -156,5 +156,7 @@ impl Application {
         }
     }
 
-    fn send_err(&self, err: Error) {}
+    fn send_err(&self, err: Error) {
+        self.event_channel.send(Event::InternalError(err)).unwrap()
+    }
 }

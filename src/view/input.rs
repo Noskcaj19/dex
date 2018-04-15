@@ -20,6 +20,7 @@ enum State {
 pub struct Input {
     text: String,
     state: State,
+    typing: bool,
     event_channel: Sender<Event>,
 }
 
@@ -28,6 +29,7 @@ impl Input {
         Input {
             text: String::new(),
             state: State::Message,
+            typing: true,
             event_channel,
         }
     }
@@ -84,13 +86,18 @@ impl Input {
                 if ch == ':' && self.text.len() == 0 {
                     self.state = State::Command
                 }
+                if self.typing {
+                    if self.text.len() == 0 {
+                        self.typing = false;
+                    }
+                } else {
+                    self.event_channel.send(Event::UserTyping).unwrap();
+                    self.typing = true;
+                }
                 self.text.push(ch);
             }
             Key::Ctrl('u') => self.text.clear(),
             _ => {}
-        }
-        if self.text.len() > 0 {
-            self.event_channel.send(Event::UserTyping).unwrap();
         }
         Ok(())
     }
