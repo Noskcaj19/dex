@@ -204,7 +204,10 @@ impl Messages {
                 write!(
                     screen,
                     "{}{}{}",
-                    cursor::Goto((size.width - RIGHT_PADDING) as u16, (*y + TOP_START) as u16),
+                    cursor::Goto(
+                        size.width.saturating_sub(RIGHT_PADDING) as u16,
+                        (*y + TOP_START) as u16
+                    ),
                     msg.timestamp
                         .with_timezone(&::chrono::offset::Local)
                         .format(&self.timestamp_fmt),

@@ -36,14 +36,11 @@ impl Input {
 
     pub fn render(&self, screen: &mut Terminal, size: TerminalSize) {
         trace!("Current buffer: {}", self.text);
-        let clipped_text = if self.text.len() > (size.width - SIDE_PADDING * 2) {
+        let saturated_side = size.width.saturating_sub(SIDE_PADDING * 2);
+        let clipped_text = if self.text.len() > saturated_side {
             let clip = self.text
                 .chars()
-                .skip(
-                    self.text
-                        .len()
-                        .saturating_sub(size.width - (SIDE_PADDING * 2) - 1),
-                )
+                .skip(self.text.len().saturating_sub(saturated_side - 1))
                 .collect::<String>();
 
             "…".to_owned() + &clip
