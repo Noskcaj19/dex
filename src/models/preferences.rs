@@ -36,7 +36,7 @@ impl Preferences {
     pub fn timestamp_fmt(&self) -> String {
         self.timestamp_fmt
             .clone()
-            .unwrap_or_else(|| "%-I:%-M".to_owned())
+            .unwrap_or_else(|| "%_I:%M".to_owned())
     }
 
     pub fn previous_guild(&self) -> Option<GuildId> {
