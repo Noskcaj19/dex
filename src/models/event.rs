@@ -16,5 +16,6 @@ pub enum Event {
     Keypress(Key),
     UserMessage(String),
     UserCommand(String),
+    UserTyping,
     InternalError(Error),
 }

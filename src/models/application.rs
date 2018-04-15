@@ -130,6 +130,13 @@ impl Application {
                 }
             }
             Ok(Event::UserCommand(_cmd)) => {}
+            Ok(Event::UserTyping) => {
+                if let Some(channel) = self.current_channel {
+                    if let Err(err) = channel.broadcast_typing() {
+                        self.send_err(format_err!("Error broadcasting typing status: {}", err));
+                    }
+                }
+            }
             Err(err) => error!("{:?}", err),
         }
     }

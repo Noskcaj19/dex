@@ -89,6 +89,9 @@ impl Input {
             Key::Ctrl('u') => self.text.clear(),
             _ => {}
         }
+        if self.text.len() > 0 {
+            self.event_channel.send(Event::UserTyping).unwrap();
+        }
         Ok(())
     }
 }
