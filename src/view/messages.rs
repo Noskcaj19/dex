@@ -174,7 +174,7 @@ impl Messages {
     ) -> Result<bool, io::Error> {
         // Show an indicator if an attachement is present
         let content = if msg.attachments.len() > 0 {
-            "📎 ".to_owned()+&msg.content_safe()
+            "📎 ".to_owned() + &msg.content_safe()
         } else {
             msg.content_safe()
         };
@@ -191,7 +191,6 @@ impl Messages {
             .collect();
         msg.content = wrapped_lines.join("\n");
 
-
         let lines: Vec<_> = msg.content.lines().rev().collect();
         for (i, line) in lines.iter().enumerate() {
             if i == (lines.len() - 1) {
@@ -204,11 +203,16 @@ impl Messages {
 
                 write!(
                     screen,
-                    "{}{}",
+                    "{}{}{}",
                     cursor::Goto((size.width - RIGHT_PADDING) as u16, (*y + TOP_START) as u16),
                     msg.timestamp
                         .with_timezone(&::chrono::offset::Local)
-                        .format(&self.timestamp_fmt)
+                        .format(&self.timestamp_fmt),
+                    if msg.edited_timestamp.is_some() {
+                        "*"
+                    } else {
+                        ""
+                    }
                 )?;
             }
             write!(
