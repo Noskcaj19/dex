@@ -11,6 +11,7 @@ extern crate toml;
 #[macro_use]
 extern crate log;
 extern crate textwrap;
+extern crate notify_rust;
 
 mod discord;
 mod errors;

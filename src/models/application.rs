@@ -1,5 +1,8 @@
 use failure::Error;
+use notify_rust::Notification;
 use serenity::model::id::{ChannelId, GuildId};
+use serenity::model::user::CurrentUser;
+use serenity::CACHE;
 
 use std::sync::mpsc::{self, Receiver, Sender};
 
@@ -22,6 +25,7 @@ pub struct Application {
     pub current_guild: Option<GuildId>,
     pub current_channel: Option<ChannelId>,
     pub event_channel: Sender<Event>,
+    pub current_user: Option<CurrentUser>,
     state: State,
     events: Receiver<Event>,
 }
@@ -42,6 +46,7 @@ impl Application {
             current_guild: None,
             current_channel: None,
             event_channel,
+            current_user: None,
             state: State::NotReady,
             events,
         })
@@ -73,6 +78,7 @@ impl Application {
         match event {
             Ok(Event::DiscordReady) => {
                 debug!("Discord ready");
+                self.current_user = Some(CACHE.read().user.clone());
                 self.state = State::Ready;
             }
             Ok(Event::Keypress(key)) => match key {
@@ -85,9 +91,24 @@ impl Application {
                 }
             },
             Ok(Event::ShutdownAll) => self.discord_client.shutdown(),
-            Ok(Event::NewMessage(msg)) => self.view
-                .message_view
-                .add_msg(MessageItem::DiscordMessage(msg)),
+            Ok(Event::NewMessage(msg)) => {
+                match &self.current_user {
+                    Some(user) if user.id != msg.author.id => {
+                        if let Err(e) = Notification::new()
+                            .summary(&msg.author.name)
+                            .body(&msg.content)
+                            .show()
+                        {
+                            error!("Error displaying notification: {}", e);
+                        }
+                    }
+                    _ => {}
+                }
+
+                self.view
+                    .message_view
+                    .add_msg(MessageItem::DiscordMessage(msg));
+            }
             Ok(Event::MessageDelete(channel_id, message_id)) => {
                 self.view.message_view.delete_msg(channel_id, message_id)
             }
