@@ -76,6 +76,9 @@ impl Application {
         let event = self.events.recv();
         trace!("Event: {:?}", event);
         match event {
+            Ok(Event::InternalError(err)) => {
+                error!("Internal error: {}", err);
+            }
             Ok(Event::DiscordReady) => {
                 debug!("Discord ready");
                 self.current_user = Some(CACHE.read().user.clone());
@@ -87,7 +90,9 @@ impl Application {
                     self.state = State::Exiting;
                 }
                 key => {
-                    let _ = self.view.input_view.key_press(key);
+                    if let Err(err) = self.view.input_view.key_press(key) {
+                        self.send_err(format_err!("Error handling input: {}", err))
+                    }
                 }
             },
             Ok(Event::ShutdownAll) => self.discord_client.shutdown(),
@@ -99,7 +104,7 @@ impl Application {
                             .body(&msg.content)
                             .show()
                         {
-                            error!("Error displaying notification: {}", e);
+                            self.send_err(format_err!("Error displaying notification: {}", e));
                         }
                     }
                     _ => {}
@@ -117,7 +122,12 @@ impl Application {
                 .delete_msg_bulk(channel_id, message_ids),
             Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(update),
             Ok(Event::UserMessage(msg)) => {
-                let _ = self.current_channel.map(|channel| channel.say(msg));
+                if self.current_channel
+                    .map(|channel| channel.say(msg))
+                    .is_none()
+                {
+                    self.send_err(format_err!("Unable to send message in current channel"))
+                }
             }
             Ok(Event::UserCommand(_cmd)) => {}
             Err(err) => error!("{:?}", err),
@@ -138,4 +148,6 @@ impl Application {
             }
         }
     }
+
+    fn send_err(&self, err: Error) {}
 }

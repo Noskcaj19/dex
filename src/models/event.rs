@@ -3,6 +3,8 @@ use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId};
 use termion::event::Key;
 
+use failure::Error;
+
 #[derive(Debug)]
 pub enum Event {
     ShutdownAll,
@@ -14,4 +16,5 @@ pub enum Event {
     Keypress(Key),
     UserMessage(String),
     UserCommand(String),
+    InternalError(Error),
 }
