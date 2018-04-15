@@ -11,10 +11,12 @@ extern crate toml;
 #[macro_use]
 extern crate log;
 extern crate notify_rust;
+extern crate signal;
 extern crate textwrap;
 
 mod discord;
 mod errors;
+mod helpers;
 mod models;
 mod view;
 

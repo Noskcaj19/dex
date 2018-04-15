@@ -9,6 +9,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use super::event::Event;
 use super::preferences::Preferences;
 use discord::DiscordClient;
+use helpers::signals::SignalHandler;
 use models::message::MessageItem;
 use view::View;
 
@@ -34,6 +35,8 @@ impl Application {
     pub fn new() -> Result<Application, Error> {
         let preferences = Preferences::load()?;
         let (event_channel, events) = mpsc::channel();
+
+        SignalHandler::start(event_channel.clone());
 
         let view = View::new(preferences.clone(), event_channel.clone());
 
@@ -136,6 +139,9 @@ impl Application {
                         self.send_err(format_err!("Error broadcasting typing status: {}", err));
                     }
                 }
+            }
+            Ok(Event::WindowSizeChange) => {
+                // Continue
             }
             Err(err) => error!("{:?}", err),
         }

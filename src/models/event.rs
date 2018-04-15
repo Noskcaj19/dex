@@ -18,4 +18,5 @@ pub enum Event {
     UserCommand(String),
     UserTyping,
     InternalError(Error),
+    WindowSizeChange,
 }
