@@ -1,5 +1,6 @@
 use std::sync::mpsc::Sender;
 
+use cmd_parsing::parse_cmd;
 use models::application::Application;
 use models::event::Event;
 
@@ -13,26 +14,25 @@ impl CommandHandler {
     }
 
     pub fn execute(&self, app: &Application, cmd: &str) {
-        let command = if let Some(ch) = cmd.chars().next() {
-            ch
-        } else {
-            return;
-        };
-
-        let args = cmd.chars().skip(1).collect::<String>();
-        let args = args.trim();
-
-        match command {
-            'q' => {
-                // Quit
-                self.event_channel.send(Event::ShutdownAll).unwrap()
+        debug!("Running command: {}", cmd);
+        if let Some(cmd) = parse_cmd(cmd) {
+            let split_cmd: Vec<_> = cmd.command.split_whitespace().collect();
+            match split_cmd.get(0).cloned().unwrap_or_default() {
+                "quit" | "q" => self.event_channel.send(Event::ShutdownAll).unwrap(),
+                "nick" => {
+                    // Nick
+                    // Todo: Add feedback when no arguments are provided
+                    if let Some(new_nick) = split_cmd.get(1) {
+                        debug!("Setting nickname to: {}", new_nick);
+                        app.current_guild
+                            .map(|guild| guild.edit_nickname(Some(new_nick)));
+                    }
+                }
+                "clearnick" | "cnick" => {
+                    app.current_guild.map(|guild| guild.edit_nickname(None));
+                }
+                _ => {}
             }
-            'n' => {
-                // Nick
-                let new_nick = if args == "c" { None } else { Some(args) };
-                app.current_guild.map(|guild| guild.edit_nickname(new_nick));
-            }
-            _ => {}
         }
     }
 }
