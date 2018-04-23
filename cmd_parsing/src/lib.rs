@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate nom;
+use nom::IResult;
 use nom::{digit, rest_s};
 use std::str::FromStr;
 
@@ -15,6 +16,18 @@ pub enum Range<'a> {
     Single(Endpoint<'a>),
     DoubledEnded(Endpoint<'a>, Endpoint<'a>),
     PastToPresent(Endpoint<'a>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Command<'a> {
+    pub range: Option<Range<'a>>,
+    pub command: &'a str,
+}
+
+impl<'a> Command<'a> {
+    pub fn new(range: Option<Range<'a>>, command: &'a str) -> Command<'a> {
+        Command { range, command }
+    }
 }
 
 named!(pub number(&str) -> usize, map_res!(digit, FromStr::from_str));
@@ -45,7 +58,7 @@ named!(search(&str) -> Endpoint,
     )
 );
 
-named!(pub endpoint(&str) -> Endpoint, alt!(fixed | moment | search));
+named!(endpoint(&str) -> Endpoint, alt!(fixed | moment | search));
 
 named!(single(&str) -> Range, do_parse!(
     endpoint: endpoint >>
@@ -65,16 +78,28 @@ named!(past_to_present(&str) -> Range, do_parse!(
     (Range::PastToPresent(endpoint))
 ));
 
-named!(pub range(&str) -> Range, alt!(double_ended | past_to_present | single));
+named!(range(&str) -> Range, alt!(double_ended | past_to_present | single));
 
 named!(
-    pub command(&str) -> (Option<Range>, &str),
-    tuple!(opt!(call!(range)), call!(rest_s))
+    command(&str) -> Command,
+    do_parse!(
+        range: opt!(call!(range)) >>
+        command: call!(rest_s) >>
+        (Command {range, command})
+    )
 );
+
+pub fn parse_cmd(cmd: &str) -> Option<Command> {
+    match command(cmd) {
+        IResult::Done(_, cmd) => Some(cmd),
+        _ => None,
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::command;
+    use super::Command;
     use super::Endpoint::*;
     use super::Range::*;
 
@@ -82,49 +107,55 @@ mod tests {
     fn cmd_no_range() {
         let result = command("d").unwrap().1;
 
-        assert_eq!(result, (None, "d"));
+        assert_eq!(result, Command::new(None, "d"));
     }
 
     #[test]
     fn past_to_present_cmd() {
         let result = command("5,d").unwrap().1;
 
-        assert_eq!(result, (Some(PastToPresent(Fixed(5))), "d"));
+        assert_eq!(result, Command::new(Some(PastToPresent(Fixed(5))), "d"));
     }
 
     #[test]
     fn double_ended_cmd() {
         let result = command("10,5d").unwrap().1;
 
-        assert_eq!(result, (Some(DoubledEnded(Fixed(10), Fixed(5))), "d"));
+        assert_eq!(
+            result,
+            Command::new(Some(DoubledEnded(Fixed(10), Fixed(5))), "d")
+        );
     }
 
     #[test]
     fn past_to_present_moment_cmd() {
         let result = command("#5,d").unwrap().1;
 
-        assert_eq!(result, (Some(PastToPresent(Moment(5))), "d"));
+        assert_eq!(result, Command::new(Some(PastToPresent(Moment(5))), "d"));
     }
 
     #[test]
     fn invalid_moment() {
         let result = command(",#5d").unwrap().1;
 
-        assert_eq!(result, (None, ",#5d"));
+        assert_eq!(result, Command::new(None, ",#5d"));
     }
 
     #[test]
     fn search_cmd() {
         let result = command("/foo/d").unwrap().1;
 
-        assert_eq!(result, (Some(Single(Search("foo"))), "d"));
+        assert_eq!(result, Command::new(Some(Single(Search("foo"))), "d"));
     }
 
     #[test]
     fn search_to_present_cmd() {
         let result = command("/bar/,d").unwrap().1;
 
-        assert_eq!(result, (Some(PastToPresent(Search("bar"))), "d"));
+        assert_eq!(
+            result,
+            Command::new(Some(PastToPresent(Search("bar"))), "d")
+        );
     }
 
     #[test]
@@ -133,7 +164,7 @@ mod tests {
 
         assert_eq!(
             result,
-            (Some(DoubledEnded(Search("foo"), Search("bar"))), "d")
+            Command::new(Some(DoubledEnded(Search("foo"), Search("bar"))), "d")
         );
     }
 
@@ -141,13 +172,13 @@ mod tests {
     fn no_range_cmd() {
         let result = command("d foo bar").unwrap().1;
 
-        assert_eq!(result, (None, "d foo bar"));
+        assert_eq!(result, Command::new(None, "d foo bar"));
     }
 
     #[test]
     fn no_range_cmd_with_slashes() {
         let result = command("d b/ar/").unwrap().1;
 
-        assert_eq!(result, (None, "d b/ar/"));
+        assert_eq!(result, Command::new(None, "d b/ar/"));
     }
 }
