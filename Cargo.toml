@@ -19,3 +19,6 @@ signal = "0.4.1"
 
 [dependencies.serenity]
 git = "https://github.com/Noskcaj19/serenity.git"
+
+[dependencies.cmd_parsing]
+path = "cmd_parsing"

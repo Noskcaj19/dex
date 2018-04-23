@@ -1,0 +1,7 @@
+[package]
+name = "cmd_parsing"
+version = "0.1.0"
+authors = ["Noskcaj <kcajdev@gmail.com>"]
+
+[dependencies]
+nom = "3.2.1"

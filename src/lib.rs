@@ -10,6 +10,7 @@ extern crate termion;
 extern crate toml;
 #[macro_use]
 extern crate log;
+extern crate cmd_parsing;
 extern crate notify_rust;
 extern crate signal;
 extern crate textwrap;
