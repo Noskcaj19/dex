@@ -149,7 +149,7 @@ impl Application {
                 }
             }
             Ok(Event::WindowSizeChange) => {
-                // Continue
+                self.view.update_size();
             }
             Err(err) => error!("{:?}", err),
         }
