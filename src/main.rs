@@ -1,7 +1,7 @@
-extern crate ded;
+extern crate dex;
 extern crate pretty_env_logger;
-use ded::Application;
-use ded::Error;
+use dex::Application;
+use dex::Error;
 
 fn main() {
     pretty_env_logger::init();

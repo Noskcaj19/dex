@@ -1,6 +1,6 @@
 [package]
 authors = ["Noskcaj <kcajdev@gmail.com>"]
-name = "ded"
+name = "dex"
 version = "0.1.0"
 
 [dependencies]
