@@ -22,9 +22,9 @@ const BOTTOM_DIFF: usize = 10;
 
 fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
     color::AnsiValue::rgb(
-        (colour.r() as u16 * 5 / 255) as u8,
-        (colour.g() as u16 * 5 / 255) as u8,
-        (colour.b() as u16 * 5 / 255) as u8,
+        (u16::from(colour.r()) * 5 / 255) as u8,
+        (u16::from(colour.g()) * 5 / 255) as u8,
+        (u16::from(colour.b()) * 5 / 255) as u8,
     )
 }
 
@@ -72,7 +72,7 @@ impl Messages {
         }
     }
 
-    pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: Vec<MessageId>) {
+    pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: &[MessageId]) {
         debug!(
             "Bulk delete: {}",
             message_ids
@@ -83,13 +83,13 @@ impl Messages {
         );
         self.messages.retain(|msg| match msg {
             MessageItem::DiscordMessage(msg) => {
-                !(msg.channel_id == channel_id) && !message_ids.contains(&msg.id)
+                msg.channel_id != channel_id && !message_ids.contains(&msg.id)
             }
         });
     }
 
     pub fn update_message(&mut self, update: MessageUpdateEvent) {
-        for mut msg in self.messages.iter_mut() {
+        for mut msg in &mut self.messages {
             match msg {
                 MessageItem::DiscordMessage(ref mut msg) => {
                     if update.id == msg.id && update.channel_id == msg.channel_id {
@@ -113,7 +113,7 @@ impl Messages {
                         member
                             .nick
                             .clone()
-                            .unwrap_or(message.author.name.to_owned()),
+                            .unwrap_or_else(|| message.author.name.to_owned()),
                         member.colour(),
                     ))
                 } else {
@@ -173,7 +173,7 @@ impl Messages {
         y: &mut usize,
     ) -> Result<bool, io::Error> {
         // Show an indicator if an attachement is present
-        let content = if msg.attachments.len() > 0 {
+        let content = if !msg.attachments.is_empty() {
             "📎 ".to_owned() + &msg.content_safe()
         } else {
             msg.content_safe()

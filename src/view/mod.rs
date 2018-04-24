@@ -11,7 +11,7 @@ use view::terminal::TerminalSize;
 
 pub struct View {
     pub terminal: terminal::Terminal,
-    event_channel: Sender<Event>,
+    _event_channel: Sender<Event>,
     event_listener_killswitch: SyncSender<()>,
     pub message_view: messages::Messages,
     pub input_view: input::Input,
@@ -19,7 +19,7 @@ pub struct View {
 }
 
 impl View {
-    pub fn new(preferences: Preferences, event_channel: Sender<Event>) -> View {
+    pub fn new(preferences: &Preferences, event_channel: Sender<Event>) -> View {
         let terminal = terminal::Terminal::new().unwrap();
         let terminal_size = terminal.size();
 
@@ -31,7 +31,7 @@ impl View {
 
         View {
             terminal,
-            event_channel,
+            _event_channel: event_channel,
             event_listener_killswitch: killswitch_tx,
             message_view,
             input_view,

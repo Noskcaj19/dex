@@ -80,11 +80,11 @@ impl Input {
                 self.submit()?;
             }
             Key::Char(ch) => {
-                if ch == ':' && self.text.len() == 0 {
+                if ch == ':' && self.text.is_empty() {
                     self.state = State::Command
                 }
                 if self.typing {
-                    if self.text.len() == 0 {
+                    if self.text.is_empty() {
                         self.typing = false;
                     }
                 } else {

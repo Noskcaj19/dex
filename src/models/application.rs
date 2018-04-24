@@ -40,7 +40,7 @@ impl Application {
 
         SignalHandler::start(event_channel.clone());
 
-        let view = View::new(preferences.clone(), event_channel.clone());
+        let view = View::new(&preferences.clone(), event_channel.clone());
 
         let command_handler = CommandHandler::new(event_channel.clone());
 
@@ -130,8 +130,8 @@ impl Application {
             }
             Ok(Event::MessageDeleteBulk(channel_id, message_ids)) => self.view
                 .message_view
-                .delete_msg_bulk(channel_id, message_ids),
-            Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(update),
+                .delete_msg_bulk(channel_id, &message_ids),
+            Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(*update),
             Ok(Event::UserMessage(msg)) => {
                 if self.current_channel
                     .map(|channel| channel.say(msg))
@@ -165,7 +165,7 @@ impl Application {
             for message in channel.messages(|_| retriever).unwrap().iter().rev() {
                 self.view
                     .message_view
-                    .add_msg(MessageItem::DiscordMessage(message.clone()));
+                    .add_msg(MessageItem::DiscordMessage(Box::new(message.clone())));
             }
         }
     }

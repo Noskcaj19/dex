@@ -26,10 +26,10 @@ impl Default for Rect {
 impl Rect {
     pub fn new(x: usize, y: usize, width: usize, height: usize) -> Rect {
         Rect {
-            x: x,
-            y: y,
-            width: width,
-            height: height,
+            x,
+            y,
+            width,
+            height,
         }
     }
 

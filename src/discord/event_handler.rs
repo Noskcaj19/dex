@@ -13,7 +13,7 @@ pub struct Handler(pub Arc<Mutex<mpsc::Sender<Event>>>);
 impl EventHandler for Handler {
     // Called when a message is received
     fn message(&self, _: Context, msg: Message) {
-        self.0.lock().send(NewMessage(msg)).unwrap();
+        self.0.lock().send(NewMessage(Box::new(msg))).unwrap();
     }
 
     fn message_delete(&self, _: Context, channel: ChannelId, message: MessageId) {
@@ -28,7 +28,10 @@ impl EventHandler for Handler {
     }
 
     fn message_update(&self, _: Context, update: MessageUpdateEvent) {
-        self.0.lock().send(MessageUpdateEvent(update)).unwrap();
+        self.0
+            .lock()
+            .send(MessageUpdateEvent(Box::new(update)))
+            .unwrap();
     }
 
     // Called when discord responds READY

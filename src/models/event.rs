@@ -8,10 +8,10 @@ use failure::Error;
 #[derive(Debug)]
 pub enum Event {
     ShutdownAll,
-    NewMessage(channel::Message),
+    NewMessage(Box<channel::Message>),
     MessageDelete(ChannelId, MessageId),
     MessageDeleteBulk(ChannelId, Vec<MessageId>),
-    MessageUpdateEvent(MessageUpdateEvent),
+    MessageUpdateEvent(Box<MessageUpdateEvent>),
     DiscordReady,
     Keypress(Key),
     UserMessage(String),
