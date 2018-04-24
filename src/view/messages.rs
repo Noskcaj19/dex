@@ -102,6 +102,25 @@ impl Messages {
         }
     }
 
+    pub fn load_messages(&mut self, channel: Option<ChannelId>, num: usize) {
+        use serenity::builder::GetMessages;
+
+        let retriever = GetMessages::default().limit(num as u64);
+        if let Some(channel) = channel {
+            self.messages.clear();
+
+            for message in channel
+                .messages(|_| retriever)
+                .unwrap()
+                .iter()
+                .rev()
+                .cloned()
+            {
+                self.add_msg(MessageItem::DiscordMessage(Box::new(message)));
+            }
+        }
+    }
+
     fn colorize_nick(&mut self, message: &channel::Message) -> String {
         let entry = self.nickname_cache.entry(message.author.id);
         use std::collections::hash_map::Entry::*;
