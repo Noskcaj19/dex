@@ -110,19 +110,15 @@ impl Application {
                 self.state = State::Exiting;
             }
             Ok(Event::NewMessage(msg)) => {
-                match &self.current_user {
-                    Some(user) if user.id != msg.author.id => {
-                        if let Err(e) = Notification::new()
-                            .summary(&msg.author.name)
-                            .body(&msg.content)
-                            .show()
-                        {
-                            self.send_err(format_err!("Error displaying notification: {}", e));
-                        }
+                if !msg.is_own() {
+                    if let Err(e) = Notification::new()
+                        .summary(&msg.author.name)
+                        .body(&msg.content)
+                        .show()
+                    {
+                        self.send_err(format_err!("Error displaying notification: {}", e));
                     }
-                    _ => {}
                 }
-
                 self.view
                     .message_view
                     .add_msg(MessageItem::DiscordMessage(msg));
