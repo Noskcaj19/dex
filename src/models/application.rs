@@ -44,13 +44,13 @@ impl Application {
 
         let command_handler = CommandHandler::new(event_channel.clone());
 
-        let discord_client = DiscordClient::start(&preferences.token(), event_channel.clone())?;
+        let discord_client = DiscordClient::start(&preferences.token, event_channel.clone())?;
 
         Ok(Application {
             view,
             discord_client,
-            current_guild: preferences.previous_guild(),
-            current_channel: preferences.previous_channel(),
+            current_guild: preferences.guild,
+            current_channel: preferences.channel,
             preferences,
             event_channel,
             command_handler,

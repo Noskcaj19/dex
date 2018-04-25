@@ -10,10 +10,10 @@ use errors::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Preferences {
-    token: String,
+    pub token: String,
     timestamp_fmt: Option<String>,
-    guild: Option<GuildId>,
-    channel: Option<ChannelId>,
+    pub guild: Option<GuildId>,
+    pub channel: Option<ChannelId>,
 }
 
 impl Preferences {
@@ -29,20 +29,9 @@ impl Preferences {
         Ok(preferences)
     }
 
-    pub fn token(&self) -> String {
-        self.token.clone()
-    }
-
     pub fn timestamp_fmt(&self) -> String {
         self.timestamp_fmt
             .clone()
             .unwrap_or_else(|| "%_I:%M".to_owned())
-    }
-
-    pub fn previous_guild(&self) -> Option<GuildId> {
-        self.guild
-    }
-    pub fn previous_channel(&self) -> Option<ChannelId> {
-        self.channel
     }
 }
