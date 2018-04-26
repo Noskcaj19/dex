@@ -61,9 +61,7 @@ impl Application {
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
-        self.view
-            .message_view
-            .load_messages(self.current_channel, self.view.terminal_size.height);
+        self.view.message_view.load_messages(self);
 
         loop {
             match self.state {

@@ -5,11 +5,13 @@ use serenity::utils::Colour;
 use termion::{color, cursor, style};
 use textwrap::fill;
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env;
 use std::io::{self, Write};
 
 use discord::utils;
+use models::application::Application;
 use models::message::MessageItem;
 use view::terminal::{Terminal, TerminalSize};
 
@@ -29,10 +31,10 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
 }
 
 pub struct Messages {
-    pub messages: Vec<MessageItem>,
+    pub messages: RefCell<Vec<MessageItem>>,
     timestamp_fmt: String,
     truecolor: bool,
-    nickname_cache: HashMap<UserId, (String, Option<Colour>)>,
+    nickname_cache: RefCell<HashMap<UserId, (String, Option<Colour>)>>,
 }
 
 impl Messages {
@@ -43,20 +45,20 @@ impl Messages {
         };
 
         Messages {
-            messages: Vec::new(),
+            messages: RefCell::new(Vec::new()),
             timestamp_fmt,
             truecolor,
-            nickname_cache: HashMap::new(),
+            nickname_cache: RefCell::new(HashMap::new()),
         }
     }
 
-    pub fn add_msg(&mut self, msg: MessageItem) {
-        self.messages.push(msg);
+    pub fn add_msg(&self, msg: MessageItem) {
+        self.messages.borrow_mut().push(msg);
     }
 
-    pub fn delete_msg(&mut self, channel_id: ChannelId, message_id: MessageId) {
+    pub fn delete_msg(&self, channel_id: ChannelId, message_id: MessageId) {
         let mut msg_index = None;
-        for (i, msg) in self.messages.iter().enumerate() {
+        for (i, msg) in self.messages.borrow().iter().enumerate() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {
                     debug!("Deleting message: {}", message_id);
@@ -68,11 +70,11 @@ impl Messages {
             }
         }
         if let Some(index) = msg_index {
-            self.messages.remove(index);
+            self.messages.borrow_mut().remove(index);
         }
     }
 
-    pub fn delete_msg_bulk(&mut self, channel_id: ChannelId, message_ids: &[MessageId]) {
+    pub fn delete_msg_bulk(&self, channel_id: ChannelId, message_ids: &[MessageId]) {
         debug!(
             "Bulk delete: {}",
             message_ids
@@ -81,15 +83,15 @@ impl Messages {
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        self.messages.retain(|msg| match msg {
+        self.messages.borrow_mut().retain(|msg| match msg {
             MessageItem::DiscordMessage(msg) => {
                 msg.channel_id != channel_id && !message_ids.contains(&msg.id)
             }
         });
     }
 
-    pub fn update_message(&mut self, update: MessageUpdateEvent) {
-        for mut msg in &mut self.messages {
+    pub fn update_message(&self, update: MessageUpdateEvent) {
+        for mut msg in self.messages.borrow_mut().iter_mut() {
             match msg {
                 MessageItem::DiscordMessage(ref mut msg) => {
                     if update.id == msg.id && update.channel_id == msg.channel_id {
@@ -102,12 +104,13 @@ impl Messages {
         }
     }
 
-    pub fn load_messages(&mut self, channel: Option<ChannelId>, num: usize) {
+    pub fn load_messages(&self, app: &Application) {
         use serenity::builder::GetMessages;
 
+        let num = app.view.terminal_size.height;
         let retriever = GetMessages::default().limit(num as u64);
-        if let Some(channel) = channel {
-            self.messages.clear();
+        if let Some(channel) = app.current_channel {
+            self.messages.borrow_mut().clear();
 
             for message in channel
                 .messages(|_| retriever)
@@ -121,8 +124,29 @@ impl Messages {
         }
     }
 
-    fn colorize_nick(&mut self, message: &channel::Message) -> String {
-        let entry = self.nickname_cache.entry(message.author.id);
+    // pub fn load_messages(&mut self, channel: Option<ChannelId>, num: usize) {
+    //     use serenity::builder::GetMessages;
+
+    //     let retriever = GetMessages::default().limit(num as u64);
+    //     if let Some(channel) = channel {
+    //         self.messages.get_mut().clear();
+
+    //         for message in channel
+    //             .messages(|_| retriever)
+    //             .unwrap()
+    //             .iter()
+    //             .rev()
+    //             .cloned()
+    //         {
+    //             self.add_msg(MessageItem::DiscordMessage(Box::new(message)));
+    //         }
+    //     }
+    // }
+
+    fn colorize_nick(&self, message: &channel::Message) -> String {
+        let mut cache = self.nickname_cache.borrow_mut();
+        let entry = cache.entry(message.author.id);
+
         use std::collections::hash_map::Entry::*;
         let (nick, colour) = match entry {
             Occupied(o) => o.into_mut(),
@@ -163,16 +187,17 @@ impl Messages {
         }
     }
 
-    pub fn render(&mut self, screen: &mut Terminal, size: TerminalSize) -> Result<(), io::Error> {
+    pub fn render(&self, screen: &mut Terminal, size: TerminalSize) -> Result<(), io::Error> {
         let rough_msg_count = size.height;
-        let msg_diff = self.messages.len().saturating_sub(rough_msg_count);
+        let mut msgs = self.messages.borrow_mut();
+        let msg_diff = msgs.len().saturating_sub(rough_msg_count);
 
-        self.messages.drain(0..msg_diff);
+        msgs.drain(0..msg_diff);
 
-        let mut messages = self.messages.clone();
+        let mut messages = msgs.clone();
 
         let mut y = size.height - BOTTOM_DIFF - 1;
-        for mut msg in &mut messages.iter_mut().rev() {
+        for mut msg in messages.iter_mut().rev() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {
                     if !self.render_discord_msg(msg, size, screen, &mut y)? {
@@ -185,7 +210,7 @@ impl Messages {
     }
 
     fn render_discord_msg(
-        &mut self,
+        &self,
         msg: &mut channel::Message,
         size: TerminalSize,
         screen: &mut Terminal,
