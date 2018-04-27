@@ -13,6 +13,7 @@ pub enum Event {
     MessageDeleteBulk(ChannelId, Vec<MessageId>),
     MessageUpdateEvent(Box<MessageUpdateEvent>),
     DiscordReady,
+    SetChannel(ChannelId),
     Keypress(Key),
     UserMessage(String),
     UserCommand(String),

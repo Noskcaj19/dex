@@ -136,6 +136,10 @@ impl Application {
                     self.send_err(format_err!("Unable to send message in current channel"))
                 }
             }
+            Ok(Event::SetChannel(new_chan)) => {
+                self.current_channel = Some(new_chan);
+                self.view.message_view.load_messages(self);
+            }
             Ok(Event::UserCommand(cmd)) => self.command_handler.execute(self, &cmd),
             Ok(Event::UserTyping) => {
                 if let Some(channel) = self.current_channel {
