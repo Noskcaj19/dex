@@ -50,6 +50,32 @@ impl Input {
 
         write!(
             screen,
+            "{}┌{}┐",
+            cursor::Goto(SIDE_PADDING as u16, (size.height - BOTTOM_START - 1) as u16),
+            "─".repeat(saturated_side)
+        ).unwrap();
+        write!(
+            screen,
+            "{}│",
+            cursor::Goto(SIDE_PADDING as u16, (size.height - BOTTOM_START) as u16),
+        ).unwrap();
+        write!(
+            screen,
+            "{}│",
+            cursor::Goto(
+                (saturated_side + SIDE_PADDING + 1) as u16,
+                (size.height - BOTTOM_START) as u16
+            ),
+        ).unwrap();
+        write!(
+            screen,
+            "{}└{}┘",
+            cursor::Goto(SIDE_PADDING as u16, (size.height - BOTTOM_START + 1) as u16),
+            "─".repeat(saturated_side)
+        ).unwrap();
+
+        write!(
+            screen,
             "{}{}",
             cursor::Goto(1 + SIDE_PADDING as u16, (size.height - BOTTOM_START) as u16),
             clipped_text,
