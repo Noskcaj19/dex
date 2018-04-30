@@ -1,11 +1,10 @@
 use models::event::Event;
-use view::terminal::{Terminal, TerminalSize};
+use view::terminal::Terminal;
 
-use std::io::Write;
 use std::sync::mpsc::Sender;
 
-use termion::cursor;
-use termion::event::Key;
+use termbuf::termion::event::Key;
+use termbuf::TermSize;
 
 use failure::Error;
 
@@ -34,13 +33,17 @@ impl Input {
         }
     }
 
-    pub fn render(&self, screen: &mut Terminal, size: TerminalSize) {
+    pub fn render(&self, screen: &mut Terminal, size: TermSize) {
         trace!("Current buffer: {}", self.text);
-        let saturated_side = size.width.saturating_sub(SIDE_PADDING * 2);
+        let saturated_side = (size.width as usize).saturating_sub(SIDE_PADDING * 2);
         let clipped_text = if self.text.len() > saturated_side {
             let clip = self.text
                 .chars()
-                .skip(self.text.len().saturating_sub(saturated_side - 1))
+                .skip(
+                    self.text
+                        .len()
+                        .saturating_sub(saturated_side.saturating_sub(1)),
+                )
                 .collect::<String>();
 
             "…".to_owned() + &clip
@@ -48,38 +51,23 @@ impl Input {
             self.text.clone()
         };
 
-        write!(
-            screen,
-            "{}┌{}┐",
-            cursor::Goto(SIDE_PADDING as u16, (size.height - BOTTOM_START - 1) as u16),
-            "─".repeat(saturated_side)
-        ).unwrap();
-        write!(
-            screen,
-            "{}│",
-            cursor::Goto(SIDE_PADDING as u16, (size.height - BOTTOM_START) as u16),
-        ).unwrap();
-        write!(
-            screen,
-            "{}│",
-            cursor::Goto(
-                (saturated_side + SIDE_PADDING + 1) as u16,
-                (size.height - BOTTOM_START) as u16
-            ),
-        ).unwrap();
-        write!(
-            screen,
-            "{}└{}┘",
-            cursor::Goto(SIDE_PADDING as u16, (size.height - BOTTOM_START + 1) as u16),
-            "─".repeat(saturated_side)
-        ).unwrap();
+        screen.buf.draw_box(
+            SIDE_PADDING as u16,
+            size.height - BOTTOM_START as u16 - 1,
+            saturated_side as u16,
+            1,
+        );
 
-        write!(
-            screen,
-            "{}{}",
-            cursor::Goto(1 + SIDE_PADDING as u16, (size.height - BOTTOM_START) as u16),
-            clipped_text,
-        ).unwrap();
+        screen.buf.put_string(
+            &clipped_text,
+            1 + SIDE_PADDING as u16,
+            size.height - BOTTOM_START as u16,
+        );
+
+        screen.buf.set_cursor_position(
+            (2 + SIDE_PADDING + clipped_text.len()) as u16,
+            size.height - BOTTOM_START as u16,
+        );
     }
 
     pub fn submit(&mut self) -> Result<(), Error> {

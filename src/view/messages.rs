@@ -2,18 +2,19 @@ use serenity::model::channel;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
-use termion::{color, cursor, style};
+use termbuf::termion::{color,  style};
+use termbuf::TermSize;
 use textwrap::fill;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env;
-use std::io::{self, Write};
+use std::io;
 
 use discord::utils;
 use models::application::Application;
 use models::message::MessageItem;
-use view::terminal::{Terminal, TerminalSize};
+use view::terminal::Terminal;
 
 const LEFT_PADDING: usize = 20;
 const RIGHT_PADDING: usize = 5;
@@ -187,16 +188,16 @@ impl Messages {
         }
     }
 
-    pub fn render(&self, screen: &mut Terminal, size: TerminalSize) -> Result<(), io::Error> {
+    pub fn render(&self, screen: &mut Terminal, size: TermSize) -> Result<(), io::Error> {
         let rough_msg_count = size.height;
         let mut msgs = self.messages.borrow_mut();
-        let msg_diff = msgs.len().saturating_sub(rough_msg_count);
+        let msg_diff = msgs.len().saturating_sub(rough_msg_count as usize);
 
         msgs.drain(0..msg_diff);
 
         let mut messages = msgs.clone();
 
-        let mut y = size.height - BOTTOM_DIFF - 1;
+        let mut y = size.height as usize - BOTTOM_DIFF - 1;
         for mut msg in messages.iter_mut().rev() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {
@@ -212,7 +213,7 @@ impl Messages {
     fn render_discord_msg(
         &self,
         msg: &mut channel::Message,
-        size: TerminalSize,
+        size: TermSize,
         screen: &mut Terminal,
         y: &mut usize,
     ) -> Result<bool, io::Error> {
@@ -228,7 +229,7 @@ impl Messages {
             .map(|line| {
                 fill(
                     line,
-                    size.width
+                    (size.width as usize)
                         .saturating_sub(RIGHT_PADDING + LEFT_PADDING + LEFT_START + TIME_PADDING),
                 )
             })
@@ -238,36 +239,34 @@ impl Messages {
         let lines: Vec<_> = msg.content.lines().rev().collect();
         for (i, line) in lines.iter().enumerate() {
             if i == (lines.len() - 1) {
-                write!(
-                    screen,
-                    "{}{}",
-                    cursor::Goto((LEFT_START) as u16, (*y + TOP_START) as u16),
-                    format!("{}:", self.colorize_nick(&msg))
-                )?;
+                screen.buf.put_string(
+                    // &format!("{}:", self.colorize_nick(&msg)),
+                    &format!("{}:", msg.author.name),
+                    (LEFT_START) as u16,
+                    (*y + TOP_START) as u16,
+                );
 
-                write!(
-                    screen,
-                    "{}{}{}",
-                    cursor::Goto(
-                        size.width.saturating_sub(RIGHT_PADDING) as u16,
-                        (*y + TOP_START) as u16
+                screen.buf.put_string(
+                    &format!(
+                        "{}{}",
+                        msg.timestamp
+                            .with_timezone(&::chrono::offset::Local)
+                            .format(&self.timestamp_fmt),
+                        if msg.edited_timestamp.is_some() {
+                            "*"
+                        } else {
+                            ""
+                        }
                     ),
-                    msg.timestamp
-                        .with_timezone(&::chrono::offset::Local)
-                        .format(&self.timestamp_fmt),
-                    if msg.edited_timestamp.is_some() {
-                        "*"
-                    } else {
-                        ""
-                    }
-                )?;
+                    size.width.saturating_sub(RIGHT_PADDING as u16) as u16,
+                    (*y + TOP_START) as u16,
+                )
             }
-            write!(
-                screen,
-                "{}{}",
-                cursor::Goto((LEFT_PADDING + LEFT_START) as u16, (*y + TOP_START) as u16),
-                line
-            )?;
+            screen.buf.put_string(
+                line,
+                (LEFT_PADDING + LEFT_START) as u16,
+                (*y + TOP_START) as u16,
+            );
             if *y == 0 {
                 return Ok(false);
             }

@@ -6,7 +6,8 @@ extern crate failure;
 extern crate serde_derive;
 extern crate chrono;
 extern crate serenity;
-extern crate termion;
+extern crate termbuf;
+// extern crate termion;
 extern crate toml;
 #[macro_use]
 extern crate log;

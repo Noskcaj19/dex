@@ -1,41 +1,26 @@
-use std::io::{self, stdout, Error, Stdout, Write};
-
-use std::cell::Cell;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 
-use termion;
-use termion::async_stdin;
-use termion::input::TermRead;
-use termion::raw::{IntoRawMode, RawTerminal};
-use termion::screen::AlternateScreen;
+use termbuf::termion::async_stdin;
+use termbuf::termion::input::TermRead;
+use termbuf::TermBuf;
 
 use models::event::Event;
 
-pub struct Terminal {
-    pub screen: Cell<AlternateScreen<RawTerminal<Stdout>>>,
-}
+use failure::Error;
 
-#[derive(Clone, Copy, Debug)]
-pub struct TerminalSize {
-    pub width: usize,
-    pub height: usize,
+pub struct Terminal {
+    pub buf: TermBuf,
 }
 
 impl Terminal {
     pub fn new() -> Result<Terminal, Error> {
-        Ok(Terminal {
-            screen: Cell::new(AlternateScreen::from(stdout().into_raw_mode()?)),
-        })
-    }
-
-    pub fn size(&self) -> TerminalSize {
-        let size = termion::terminal_size().unwrap();
-        TerminalSize {
-            width: size.0 as usize,
-            height: size.1 as usize,
-        }
+        let mut term = Terminal {
+            buf: TermBuf::init()?,
+        };
+        term.buf.set_cursor_visible(true);
+        Ok(term)
     }
 
     pub fn listen(&self, event_channel: Sender<Event>, killswitch: Receiver<()>) {
@@ -52,15 +37,5 @@ impl Terminal {
                 }
             }
         });
-    }
-}
-
-impl Write for Terminal {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.screen.get_mut().write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.screen.get_mut().flush()
     }
 }

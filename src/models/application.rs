@@ -80,7 +80,7 @@ impl Application {
     }
 
     pub fn wait_for_event(&mut self) {
-        use termion::event::Key;
+        use termbuf::termion::event::Key;
         let event = self.events.recv();
         trace!("Event: {:?}", event);
         match event {

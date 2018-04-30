@@ -1,7 +1,7 @@
 use serenity::model::channel;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId};
-use termion::event::Key;
+use termbuf::termion::event::Key;
 
 use failure::Error;
 
