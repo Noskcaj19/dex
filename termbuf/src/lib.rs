@@ -1,6 +1,5 @@
 pub extern crate termion;
 extern crate unicode_segmentation;
-extern crate unicode_width;
 
 use std::io::{stdout, Error, Stdout, Write};
 
@@ -8,7 +7,6 @@ use termion::raw::{IntoRawMode, RawTerminal};
 use termion::screen::AlternateScreen;
 
 use unicode_segmentation::UnicodeSegmentation;
-use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Copy, Clone)]
 pub struct TermSize {
@@ -16,7 +14,7 @@ pub struct TermSize {
     pub height: u16,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TermCell {
     pub ch: String,
 }
@@ -27,6 +25,7 @@ pub struct TermBuf {
     show_cursor: bool,
     cursor_pos: (u16, u16),
     buf: Vec<Vec<Option<TermCell>>>,
+    old_buf: Vec<Vec<Option<TermCell>>>,
 }
 
 impl TermBuf {
@@ -41,7 +40,8 @@ impl TermBuf {
         let buf = vec![vec![None; size.width as usize]; size.height as usize];
         Ok(TermBuf {
             terminal: AlternateScreen::from(stdout().into_raw_mode()?),
-            buf,
+            buf: buf.clone(),
+            old_buf: buf,
             show_cursor: true,
             cursor_pos: (1, 1),
             size,
@@ -68,33 +68,25 @@ impl TermBuf {
 
     /// Draw internal buffer to the terminal
     pub fn draw(&mut self) -> Result<(), Error> {
-        write!(self.terminal, "{}", termion::clear::All)?;
-
-        for (row, text) in self.buf.iter().enumerate() {
-            eprintln!(
-                "{:?}",
-                text.into_iter()
-                    .map(|cell| if let Some(cell) = cell {
-                        cell.ch.to_owned()
-                    } else {
-                        " ".to_owned()
-                    })
-                    .collect::<String>()
-                    .trim_right()
-            );
-            write!(
-                self.terminal,
-                "{}{}",
-                termion::cursor::Goto(1, row as u16),
-                text.into_iter()
-                    .map(|cell| if let Some(cell) = cell {
-                        cell.ch.to_owned()
-                    } else {
-                        " ".to_owned()
-                    })
-                    .collect::<String>()
-                    .trim_right()
-            )?;
+        for (index, row) in self.buf.iter().enumerate() {
+            if *row != self.old_buf[index] {
+                write!(
+                    self.terminal,
+                    "{}{}{}",
+                    termion::cursor::Goto(1, index as u16),
+                    termion::clear::CurrentLine,
+                    self.buf[index]
+                        .iter()
+                        .map(|cell| if let Some(cell) = cell {
+                            cell.ch.to_owned()
+                        } else {
+                            " ".to_owned()
+                        })
+                        .collect::<String>()
+                        .trim_right()
+                )?;
+                self.old_buf[index] = row.clone();
+            }
         }
 
         if self.show_cursor {
@@ -109,12 +101,12 @@ impl TermBuf {
     }
 
     /// Sets cursor visiblity
-    pub fn set_cursor_visible(&mut self, visible: bool) {
+    pub fn set_cursor_visible(&mut self, visible: bool) -> Result<(), Error> {
         self.show_cursor = visible;
         if visible {
-            write!(self.terminal, "{}", termion::cursor::Show);
+            write!(self.terminal, "{}", termion::cursor::Show)
         } else {
-            write!(self.terminal, "{}", termion::cursor::Hide);
+            write!(self.terminal, "{}", termion::cursor::Hide)
         }
     }
 
@@ -149,10 +141,11 @@ impl TermBuf {
     pub fn put_string(&mut self, string: &str, mut x: u16, mut y: u16) {
         for ch in UnicodeSegmentation::graphemes(string, true) {
             match ch {
-                "\n" => y += 1,
+                "\n" => {
+                    y += 1;
+                }
                 _ => {
                     self.set_cell(TermCell { ch: ch.to_owned() }, x, y);
-                    // x += UnicodeWidthStr::width(ch) as u16;
                     x += 1;
                 }
             }

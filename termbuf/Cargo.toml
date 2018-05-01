@@ -7,4 +7,3 @@ authors = ["Noskcaj <kcajdev@gmail.com>"]
 termion = "1.5.1"
 failure = "0.1.1"
 unicode-segmentation = "1.2.1"
-unicode-width = "0.1.4"

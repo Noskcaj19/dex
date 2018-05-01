@@ -19,7 +19,7 @@ impl Terminal {
         let mut term = Terminal {
             buf: TermBuf::init()?,
         };
-        term.buf.set_cursor_visible(true);
+        term.buf.set_cursor_visible(true)?;
         Ok(term)
     }
 
