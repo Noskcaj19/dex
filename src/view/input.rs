@@ -52,21 +52,19 @@ impl Input {
         };
 
         screen.buf.draw_box(
-            SIDE_PADDING as u16,
-            size.height - BOTTOM_START as u16 - 1,
-            saturated_side as u16,
+            SIDE_PADDING,
+            size.height - BOTTOM_START - 1,
+            saturated_side,
             1,
         );
 
-        screen.buf.put_string(
-            &clipped_text,
-            1 + SIDE_PADDING as u16,
-            size.height - BOTTOM_START as u16,
-        );
+        screen
+            .buf
+            .put_string(&clipped_text, 1 + SIDE_PADDING, size.height - BOTTOM_START);
 
         screen.buf.set_cursor_position(
-            (2 + SIDE_PADDING + clipped_text.len()) as u16,
-            size.height - BOTTOM_START as u16,
+            2 + SIDE_PADDING + clipped_text.len(),
+            size.height - BOTTOM_START,
         );
     }
 

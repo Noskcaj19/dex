@@ -25,7 +25,7 @@ impl View {
         let terminal = terminal::Terminal::new().unwrap();
         // let terminal = termbuf::TermBuf::init().unwrap();
 
-        let terminal_size = terminal.buf.size().expect("Unable to get term size");
+        let terminal_size = terminal.buf.size().expect("Unable to get size");
 
         let (killswitch_tx, killswitch_rx) = mpsc::sync_channel(0);
         terminal.listen(event_channel.clone(), killswitch_rx);
@@ -44,7 +44,7 @@ impl View {
     }
 
     pub fn present(&mut self) -> Result<(), Error> {
-        self.terminal.buf.clear();
+        self.terminal.buf.clear()?;
 
         self.message_view
             .render(&mut self.terminal, self.terminal_size)?;
@@ -55,7 +55,11 @@ impl View {
     }
 
     pub fn update_size(&mut self) {
-        self.terminal_size = self.terminal.buf.size().expect("Unable to get term size");
+        self.terminal_size = self.terminal
+            .buf
+            .size()
+            .expect("Unable to get terminal size");
+        self.present().expect("Unable to redraw");
     }
 }
 

@@ -2,7 +2,7 @@ use serenity::model::channel;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
-use termbuf::termion::{color,  style};
+use termbuf::termion::{color, style};
 use termbuf::TermSize;
 use textwrap::fill;
 
@@ -242,8 +242,8 @@ impl Messages {
                 screen.buf.put_string(
                     // &format!("{}:", self.colorize_nick(&msg)),
                     &format!("{}:", msg.author.name),
-                    (LEFT_START) as u16,
-                    (*y + TOP_START) as u16,
+                    LEFT_START,
+                    *y + TOP_START,
                 );
 
                 screen.buf.put_string(
@@ -258,15 +258,13 @@ impl Messages {
                             ""
                         }
                     ),
-                    size.width.saturating_sub(RIGHT_PADDING as u16) as u16,
-                    (*y + TOP_START) as u16,
+                    size.width.saturating_sub(RIGHT_PADDING),
+                    *y + TOP_START,
                 )
             }
-            screen.buf.put_string(
-                line,
-                (LEFT_PADDING + LEFT_START) as u16,
-                (*y + TOP_START) as u16,
-            );
+            screen
+                .buf
+                .put_string(line, LEFT_PADDING + LEFT_START, *y + TOP_START);
             if *y == 0 {
                 return Ok(false);
             }

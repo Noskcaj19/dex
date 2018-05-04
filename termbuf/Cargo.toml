@@ -1,9 +1,0 @@
-[package]
-name = "termbuf"
-version = "0.1.0"
-authors = ["Noskcaj <kcajdev@gmail.com>"]
-
-[dependencies]
-termion = "1.5.1"
-failure = "0.1.1"
-unicode-segmentation = "1.2.1"
