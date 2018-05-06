@@ -13,7 +13,7 @@ chrono = "0.4.2"
 termion = "1.5.1"
 log = "0.4.1"
 pretty_env_logger = "0.2.2"
-textwrap = "0.9.0"
+textwrap = "0.10.0"
 notify-rust = "3.4.2"
 signal = "0.4.1"
 
