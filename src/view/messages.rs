@@ -220,12 +220,6 @@ impl Messages {
         for (i, line) in lines.iter().enumerate() {
             if i == (lines.len() - 1) {
                 self.put_nick(&msg, screen, LEFT_START, *y + TOP_START);
-                // screen.buf.put_string(
-                //     // &format!("{}:", self.colorize_nick(&msg)),
-                //     &format!("{}:", msg.author.name),
-                //     LEFT_START,
-                //     *y + TOP_START,
-                // );
 
                 screen.buf.put_string(
                     &format!(
