@@ -2,7 +2,7 @@ use serenity::model::channel;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::utils::Colour;
-use termbuf::termion::{color, style};
+use termbuf::Color;
 use termbuf::TermSize;
 use textwrap::fill;
 
@@ -23,12 +23,11 @@ const LEFT_START: usize = 0;
 const TOP_START: usize = 5;
 const BOTTOM_DIFF: usize = 10;
 
-fn color_to_8bit(colour: ::serenity::utils::Colour) -> color::AnsiValue {
-    color::AnsiValue::rgb(
-        (u16::from(colour.r()) * 5 / 255) as u8,
-        (u16::from(colour.g()) * 5 / 255) as u8,
-        (u16::from(colour.b()) * 5 / 255) as u8,
-    )
+fn color_to_8bit(colour: ::serenity::utils::Colour) -> Color {
+    let r = (u16::from(colour.r()) * 5 / 255) as u8;
+    let g = (u16::from(colour.g()) * 5 / 255) as u8;
+    let b = (u16::from(colour.b()) * 5 / 255) as u8;
+    Color::AnsiValue(16 + 36 * r + 6 * g + b)
 }
 
 pub struct Messages {
@@ -125,26 +124,7 @@ impl Messages {
         }
     }
 
-    // pub fn load_messages(&mut self, channel: Option<ChannelId>, num: usize) {
-    //     use serenity::builder::GetMessages;
-
-    //     let retriever = GetMessages::default().limit(num as u64);
-    //     if let Some(channel) = channel {
-    //         self.messages.get_mut().clear();
-
-    //         for message in channel
-    //             .messages(|_| retriever)
-    //             .unwrap()
-    //             .iter()
-    //             .rev()
-    //             .cloned()
-    //         {
-    //             self.add_msg(MessageItem::DiscordMessage(Box::new(message)));
-    //         }
-    //     }
-    // }
-
-    fn colorize_nick(&self, message: &channel::Message) -> String {
+    fn put_nick(&self, message: &channel::Message, screen: &mut Terminal, x: usize, y: usize) {
         let mut cache = self.nickname_cache.borrow_mut();
         let entry = cache.entry(message.author.id);
 
@@ -169,22 +149,22 @@ impl Messages {
         match colour {
             Some(colour) => {
                 if self.truecolor {
-                    format!(
-                        "{}{}{}",
-                        color::Fg(color::Rgb(colour.r(), colour.g(), colour.b())),
-                        nick,
-                        style::Reset,
-                    )
+                    screen
+                        .buf
+                        .put_string_with(nick, x, y)
+                        .fg(Color::Rgb(colour.r(), colour.g(), colour.b()))
+                        .build();
                 } else {
-                    format!(
-                        "{}{}{}",
-                        color::Fg(color_to_8bit(*colour)),
-                        nick,
-                        style::Reset,
-                    )
+                    screen
+                        .buf
+                        .put_string_with(nick, x, y)
+                        .fg(color_to_8bit(*colour))
+                        .build();
                 }
             }
-            None => message.author.name.to_string(),
+            None => {
+                screen.buf.put_string(&message.author.name, x, y);
+            }
         }
     }
 
@@ -239,12 +219,13 @@ impl Messages {
         let lines: Vec<_> = msg.content.lines().rev().collect();
         for (i, line) in lines.iter().enumerate() {
             if i == (lines.len() - 1) {
-                screen.buf.put_string(
-                    // &format!("{}:", self.colorize_nick(&msg)),
-                    &format!("{}:", msg.author.name),
-                    LEFT_START,
-                    *y + TOP_START,
-                );
+                self.put_nick(&msg, screen, LEFT_START, *y + TOP_START);
+                // screen.buf.put_string(
+                //     // &format!("{}:", self.colorize_nick(&msg)),
+                //     &format!("{}:", msg.author.name),
+                //     LEFT_START,
+                //     *y + TOP_START,
+                // );
 
                 screen.buf.put_string(
                     &format!(
