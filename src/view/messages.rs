@@ -239,7 +239,7 @@ impl Messages {
                             ""
                         }
                     ),
-                    size.width.saturating_sub(RIGHT_PADDING),
+                    size.width.saturating_sub(RIGHT_PADDING + 1),
                     *y + TOP_START,
                 )
             }
