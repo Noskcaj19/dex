@@ -1,5 +1,5 @@
 use serenity::model::channel;
-use serenity::model::event::MessageUpdateEvent;
+use serenity::model::event::{MessageUpdateEvent, TypingStartEvent};
 use serenity::model::id::{ChannelId, MessageId};
 use termbuf::termion::event::Key;
 
@@ -18,6 +18,7 @@ pub enum Event {
     UserMessage(String),
     UserCommand(String),
     UserTyping,
+    TypingStart(TypingStartEvent),
     InternalError(Error),
     WindowSizeChange,
 }

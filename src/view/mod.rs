@@ -1,3 +1,4 @@
+mod indicator;
 mod input;
 mod messages;
 mod terminal;
@@ -18,6 +19,7 @@ pub struct View {
     pub message_view: messages::Messages,
     pub input_view: input::Input,
     pub terminal_size: termbuf::TermSize,
+    pub indicator: indicator::Indicator,
 }
 
 impl View {
@@ -32,6 +34,7 @@ impl View {
 
         let message_view = messages::Messages::new(preferences.timestamp_fmt());
         let input_view = input::Input::new(event_channel.clone());
+        let indicator = indicator::Indicator::new(event_channel.clone());
 
         View {
             terminal,
@@ -40,6 +43,7 @@ impl View {
             message_view,
             input_view,
             terminal_size,
+            indicator,
         }
     }
 
@@ -49,6 +53,8 @@ impl View {
         self.message_view
             .render(&mut self.terminal, self.terminal_size)?;
         self.input_view
+            .render(&mut self.terminal, self.terminal_size);
+        self.indicator
             .render(&mut self.terminal, self.terminal_size);
         self.terminal.buf.draw()?;
         Ok(())

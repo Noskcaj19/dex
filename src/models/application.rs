@@ -148,6 +148,9 @@ impl Application {
                     }
                 }
             }
+            Ok(Event::TypingStart(event)) => {
+                self.view.indicator.typing_start(event);
+            }
             Ok(Event::WindowSizeChange) => {
                 self.view.update_size();
             }

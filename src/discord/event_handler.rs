@@ -1,7 +1,7 @@
 use std::sync::{mpsc, Arc};
 
 use serenity::model::channel::Message;
-use serenity::model::event::MessageUpdateEvent;
+use serenity::model::event::{MessageUpdateEvent, TypingStartEvent};
 use serenity::model::gateway::Ready;
 use serenity::model::id::{ChannelId, MessageId};
 use serenity::prelude::*;
@@ -32,6 +32,10 @@ impl EventHandler for Handler {
             .lock()
             .send(MessageUpdateEvent(Box::new(update)))
             .unwrap();
+    }
+
+    fn typing_start(&self, _: Context, event: TypingStartEvent) {
+        self.0.lock().send(TypingStart(event)).unwrap();
     }
 
     // Called when discord responds READY
