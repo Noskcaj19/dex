@@ -91,6 +91,9 @@ impl Input {
             Key::Char('\n') => {
                 self.submit()?;
             }
+            Key::Char('\t') => {
+                // Glitching out, to be used for channel switching
+            }
             Key::Char(ch) => {
                 if ch == ':' && self.text.is_empty() {
                     self.state = State::Command
