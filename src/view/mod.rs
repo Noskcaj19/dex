@@ -1,3 +1,4 @@
+mod guild_list;
 mod indicator;
 mod input;
 mod messages;
@@ -20,6 +21,7 @@ pub struct View {
     pub input_view: input::Input,
     pub terminal_size: termbuf::TermSize,
     pub indicator: indicator::Indicator,
+    pub guild_list: guild_list::GuildList,
 }
 
 impl View {
@@ -35,6 +37,7 @@ impl View {
         let message_view = messages::Messages::new(preferences.timestamp_fmt());
         let input_view = input::Input::new(event_channel.clone());
         let indicator = indicator::Indicator::new(event_channel.clone());
+        let guild_list = guild_list::GuildList::new();
 
         View {
             terminal,
@@ -44,6 +47,7 @@ impl View {
             input_view,
             terminal_size,
             indicator,
+            guild_list,
         }
     }
 
@@ -55,6 +59,8 @@ impl View {
         self.input_view
             .render(&mut self.terminal, self.terminal_size);
         self.indicator
+            .render(&mut self.terminal, self.terminal_size);
+        self.guild_list
             .render(&mut self.terminal, self.terminal_size);
         self.terminal.buf.draw()?;
         Ok(())

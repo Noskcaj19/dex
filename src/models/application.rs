@@ -91,6 +91,8 @@ impl Application {
                 debug!("Discord ready");
                 self.current_user = Some(CACHE.read().user.clone());
                 self.state = State::Ready;
+
+                self.view.guild_list.populate_guild_list();
             }
             Ok(Event::Keypress(key)) => match key {
                 Key::Ctrl('c') | Key::Ctrl('d') => {
