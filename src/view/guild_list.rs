@@ -9,7 +9,7 @@ use serenity::CACHE;
 use termbuf::Style::Bold;
 use termbuf::TermSize;
 
-const TOP_START: usize = 3;
+const TOP_START: usize = 2;
 const LEFT_START: usize = 2;
 const MAX_LEN: usize = 28;
 
@@ -183,6 +183,6 @@ impl GuildList {
 
         screen
             .buf
-            .draw_vertical_line(MAX_LEN - 1, 4, size.height - 9)
+            .draw_vertical_line(MAX_LEN - 1, 2, size.height - 7)
     }
 }

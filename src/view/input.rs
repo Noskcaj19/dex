@@ -52,7 +52,7 @@ impl Input {
         };
 
         screen.buf.draw_box(
-            SIDE_PADDING,
+            SIDE_PADDING - 1,
             size.height - BOTTOM_START - 1,
             saturated_side,
             1,
@@ -60,10 +60,10 @@ impl Input {
 
         screen
             .buf
-            .put_string(&clipped_text, 1 + SIDE_PADDING, size.height - BOTTOM_START);
+            .put_string(&clipped_text, SIDE_PADDING, size.height - BOTTOM_START);
 
         screen.buf.set_cursor_position(
-            2 + SIDE_PADDING + clipped_text.len(),
+            1 + SIDE_PADDING + clipped_text.len(),
             size.height - BOTTOM_START,
         );
     }

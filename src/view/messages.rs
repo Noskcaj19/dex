@@ -20,8 +20,8 @@ const LEFT_PADDING: usize = 20;
 const RIGHT_PADDING: usize = 5;
 const TIME_PADDING: usize = 3;
 const LEFT_START: usize = 30;
-const TOP_START: usize = 5;
-const BOTTOM_DIFF: usize = 10;
+const TOP_START: usize = 1;
+const BOTTOM_DIFF: usize = 6;
 
 fn color_to_8bit(colour: ::serenity::utils::Colour) -> Color {
     let r = (u16::from(colour.r()) * 5 / 255) as u8;
