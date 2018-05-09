@@ -25,3 +25,8 @@ git = "https://github.com/Noskcaj19/serenity.git"
 
 [dependencies.cmd_parsing]
 path = "cmd_parsing"
+
+[features]
+default = []
+
+nerd_font = []

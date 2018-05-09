@@ -122,7 +122,7 @@ impl GuildList {
         }
     }
 
-    pub fn render(&self, screen: &mut Terminal, _size: TermSize) {
+    pub fn render(&self, screen: &mut Terminal, size: TermSize) {
         let mut y = 0;
         for guild in &self.guild_list {
             screen
@@ -155,17 +155,13 @@ impl GuildList {
                 );
                 y += 1;
                 for channel in &category.channels {
-                    screen.buf.put_string(
-                        &format!(
-                            "{}",
-                            truncate(
-                                channel.read().name.clone(),
-                                MAX_LEN.saturating_sub(LEFT_START + 7)
-                            )
-                        ),
-                        LEFT_START + 5,
-                        TOP_START + y,
-                    );
+                    let channel = channel.read();
+                    let mut text =
+                        truncate(channel.name.clone(), MAX_LEN.saturating_sub(LEFT_START + 7));
+                    if let ChannelType::Voice = channel.kind {
+                        text = format!("{} {}", ::helpers::chars::VOLUME, text);
+                    }
+                    screen.buf.put_string(&text, LEFT_START + 5, TOP_START + y);
                     y += 1;
                 }
             }
@@ -184,5 +180,9 @@ impl GuildList {
                 y += 1;
             }
         }
+
+        screen
+            .buf
+            .draw_vertical_line(MAX_LEN - 1, 4, size.height - 9)
     }
 }
