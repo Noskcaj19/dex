@@ -159,7 +159,7 @@ impl GuildList {
                     let mut text =
                         truncate(channel.name.clone(), MAX_LEN.saturating_sub(LEFT_START + 7));
                     if let ChannelType::Voice = channel.kind {
-                        text = format!("{} {}", ::helpers::chars::VOLUME, text);
+                        text = format!("{} {}", ::helpers::chars::VOLUME_OFF, text);
                     }
                     screen.buf.put_string(&text, LEFT_START + 5, TOP_START + y);
                     y += 1;
