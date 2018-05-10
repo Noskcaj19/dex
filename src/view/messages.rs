@@ -1,6 +1,7 @@
 use serenity::model::channel;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
+use serenity::prelude::Mutex;
 use serenity::utils::Colour;
 use termbuf::Color;
 use termbuf::TermSize;
@@ -10,6 +11,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env;
 use std::io;
+use std::sync::Arc;
 
 use discord::utils;
 use models::application::Application;
@@ -19,7 +21,8 @@ use view::terminal::Terminal;
 const LEFT_PADDING: usize = 20;
 const RIGHT_PADDING: usize = 5;
 const TIME_PADDING: usize = 3;
-const LEFT_START: usize = 30;
+const LEFT_START: usize = 5;
+const LEFT_START_EXTENDED: usize = 30;
 const TOP_START: usize = 1;
 const BOTTOM_DIFF: usize = 6;
 
@@ -35,10 +38,11 @@ pub struct Messages {
     timestamp_fmt: String,
     truecolor: bool,
     nickname_cache: RefCell<HashMap<UserId, (String, Option<Colour>)>>,
+    show_sidebar: Arc<Mutex<bool>>,
 }
 
 impl Messages {
-    pub fn new(timestamp_fmt: String) -> Messages {
+    pub fn new(timestamp_fmt: String, show_sidebar: bool) -> Messages {
         let truecolor = match env::var("COLORTERM") {
             Ok(term) => term.to_lowercase() == "truecolor",
             Err(_) => false,
@@ -49,7 +53,16 @@ impl Messages {
             timestamp_fmt,
             truecolor,
             nickname_cache: RefCell::new(HashMap::new()),
+            show_sidebar: Arc::new(Mutex::new(show_sidebar)),
         }
+    }
+
+    pub fn set_show_sidebar(&self, state: bool) {
+        *self.show_sidebar.lock() = state
+    }
+
+    pub fn showing_sidebar(&self) -> bool {
+        *self.show_sidebar.lock()
     }
 
     pub fn add_msg(&self, msg: MessageItem) {
@@ -204,13 +217,19 @@ impl Messages {
             msg.content_safe()
         };
 
+        let left_start = if self.showing_sidebar() {
+            LEFT_START_EXTENDED
+        } else {
+            LEFT_START
+        };
+
         let wrapped_lines: Vec<String> = content
             .lines()
             .map(|line| {
                 fill(
                     line,
                     (size.width as usize)
-                        .saturating_sub(RIGHT_PADDING + LEFT_PADDING + LEFT_START + TIME_PADDING),
+                        .saturating_sub(RIGHT_PADDING + LEFT_PADDING + left_start + TIME_PADDING),
                 )
             })
             .collect();
@@ -219,7 +238,7 @@ impl Messages {
         let lines: Vec<_> = msg.content.lines().rev().collect();
         for (i, line) in lines.iter().enumerate() {
             if i == (lines.len() - 1) {
-                self.put_nick(&msg, screen, LEFT_START, *y + TOP_START);
+                self.put_nick(&msg, screen, left_start, *y + TOP_START);
 
                 screen.buf.put_string(
                     &format!(
@@ -239,7 +258,7 @@ impl Messages {
             }
             screen
                 .buf
-                .put_string(line, LEFT_PADDING + LEFT_START, *y + TOP_START);
+                .put_string(line, LEFT_PADDING + left_start, *y + TOP_START);
             if *y == 0 {
                 return Ok(false);
             }

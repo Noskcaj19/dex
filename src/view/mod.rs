@@ -34,7 +34,7 @@ impl View {
         let (killswitch_tx, killswitch_rx) = mpsc::sync_channel(0);
         terminal.listen(event_channel.clone(), killswitch_rx);
 
-        let message_view = messages::Messages::new(preferences.timestamp_fmt());
+        let message_view = messages::Messages::new(preferences.timestamp_fmt(), false);
         let input_view = input::Input::new(event_channel.clone());
         let indicator = indicator::Indicator::new(event_channel.clone());
         let guild_list = guild_list::GuildList::new();
@@ -60,8 +60,10 @@ impl View {
             .render(&mut self.terminal, self.terminal_size);
         self.indicator
             .render(&mut self.terminal, self.terminal_size);
-        self.guild_list
-            .render(&mut self.terminal, self.terminal_size);
+        if self.message_view.showing_sidebar() {
+            self.guild_list
+                .render(&mut self.terminal, self.terminal_size);
+        }
         self.terminal.buf.draw()?;
         Ok(())
     }

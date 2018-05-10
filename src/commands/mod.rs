@@ -40,6 +40,10 @@ impl CommandHandler {
                         // Invalid id
                     }
                 },
+                "togglesidebar" | "tbar" => {
+                    let new_state = !app.view.message_view.showing_sidebar();
+                    app.view.message_view.set_show_sidebar(new_state);
+                }
                 _ => {}
             }
         }
