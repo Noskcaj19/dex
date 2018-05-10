@@ -21,7 +21,7 @@ impl Preferences {
         let home_dir = env::home_dir().ok_or(HomeDirError)?;
         let mut file = OpenOptions::new()
             .read(true)
-            .open(home_dir.join(".config/ded/config.toml"))?;
+            .open(home_dir.join(".config/dex/config.toml"))?;
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
 
