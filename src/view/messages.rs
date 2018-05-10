@@ -177,7 +177,7 @@ impl Messages {
 
         let mut messages = msgs.clone();
 
-        let mut y = size.height as usize - BOTTOM_DIFF - 1;
+        let mut y = size.height.saturating_sub(BOTTOM_DIFF + 1);
         for mut msg in messages.iter_mut().rev() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {

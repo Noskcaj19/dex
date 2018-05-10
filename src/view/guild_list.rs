@@ -183,6 +183,6 @@ impl GuildList {
 
         screen
             .buf
-            .draw_vertical_line(MAX_LEN - 1, 2, size.height - 7)
+            .draw_vertical_line(MAX_LEN - 1, 2, size.height.saturating_sub(7))
     }
 }

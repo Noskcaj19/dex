@@ -53,18 +53,20 @@ impl Input {
 
         screen.buf.draw_box(
             SIDE_PADDING - 1,
-            size.height - BOTTOM_START - 1,
+            size.height.saturating_sub(BOTTOM_START + 1),
             saturated_side,
             1,
         );
 
-        screen
-            .buf
-            .put_string(&clipped_text, SIDE_PADDING, size.height - BOTTOM_START);
+        screen.buf.put_string(
+            &clipped_text,
+            SIDE_PADDING,
+            size.height.saturating_sub(BOTTOM_START),
+        );
 
         screen.buf.set_cursor_position(
             1 + SIDE_PADDING + clipped_text.len(),
-            size.height - BOTTOM_START,
+            size.height.saturating_sub(BOTTOM_START),
         );
     }
 
