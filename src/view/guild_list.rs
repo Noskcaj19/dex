@@ -141,7 +141,11 @@ impl GuildList {
                 .style(Bold)
                 .build();
             y += 1;
-            for category in guild.categories.values() {
+
+            let mut categories = guild.categories.values().collect::<Vec<_>>();
+            categories.sort_by_key(|entry| entry.category.read().position);
+
+            for category in &categories {
                 screen.buf.put_string(
                     &format!(
                         "{}",
