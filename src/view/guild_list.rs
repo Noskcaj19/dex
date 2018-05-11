@@ -67,8 +67,10 @@ impl GuildList {
     }
 
     pub fn populate_guild_list(&mut self) {
-        let cache = CACHE.read();
-        let user = &cache.user;
+        let user = {
+            let cache = CACHE.read();
+            &cache.user.clone()
+        };
 
         self.guild_list.clear();
 

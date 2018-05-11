@@ -1,9 +1,6 @@
 use std::sync::{mpsc, Arc};
 
-use serenity::model::channel::Message;
-use serenity::model::event::{MessageUpdateEvent, TypingStartEvent};
-use serenity::model::gateway::Ready;
-use serenity::model::id::{ChannelId, MessageId};
+use serenity::model::prelude::*;
 use serenity::prelude::*;
 
 use models::event::Event::{self, *};
@@ -27,11 +24,15 @@ impl EventHandler for Handler {
             .unwrap()
     }
 
-    fn message_update(&self, _: Context, update: MessageUpdateEvent) {
+    fn message_update(&self, _: Context, update: event::MessageUpdateEvent) {
         self.0
             .lock()
             .send(MessageUpdateEvent(Box::new(update)))
             .unwrap();
+    }
+
+    fn channel_update(&self, _: Context, _: Option<Channel>, _: Channel) {
+        self.0.lock().send(ChannelUpdateEvent).unwrap();
     }
 
     fn typing_start(&self, _: Context, event: TypingStartEvent) {
