@@ -1,5 +1,4 @@
 use failure::Error;
-use serenity::model::id::{ChannelId, GuildId};
 use toml;
 
 use std::env;
@@ -12,8 +11,7 @@ use errors::*;
 pub struct Preferences {
     pub token: String,
     timestamp_fmt: Option<String>,
-    pub guild: Option<GuildId>,
-    pub channel: Option<ChannelId>,
+    nerd_fonts: Option<bool>,
 }
 
 impl Preferences {
@@ -33,5 +31,9 @@ impl Preferences {
         self.timestamp_fmt
             .clone()
             .unwrap_or_else(|| "%_I:%M".to_owned())
+    }
+
+    pub fn nerd_fonts(&self) -> bool {
+        self.nerd_fonts.unwrap_or(false)
     }
 }

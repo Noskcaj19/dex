@@ -1,16 +1,25 @@
 use std::sync::mpsc::Sender;
 
+use std::sync::Arc;
+
 use cmd_parsing::parse_cmd;
 use models::application::Application;
 use models::event::Event;
+use models::state::State;
+
+use serenity::prelude::Mutex;
 
 pub struct CommandHandler {
     event_channel: Sender<Event>,
+    state: Arc<Mutex<State>>,
 }
 
 impl CommandHandler {
-    pub fn new(event_channel: Sender<Event>) -> CommandHandler {
-        CommandHandler { event_channel }
+    pub fn new(event_channel: Sender<Event>, state: Arc<Mutex<State>>) -> CommandHandler {
+        CommandHandler {
+            event_channel,
+            state,
+        }
     }
 
     // Todo: Add feedback when no arguments are provided
@@ -42,6 +51,7 @@ impl CommandHandler {
                 },
                 "togglesidebar" | "tbar" => {
                     let new_state = !app.view.message_view.showing_sidebar();
+                    self.state.lock().guild_sidebar_visible = new_state;
                     app.view.message_view.set_show_sidebar(new_state);
                 }
                 _ => {}

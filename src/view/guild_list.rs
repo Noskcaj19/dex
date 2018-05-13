@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use serenity::model::prelude::*;
-use serenity::prelude::RwLock;
+use serenity::prelude::*;
 use serenity::CACHE;
 use termbuf::Style::Bold;
 use termbuf::TermSize;

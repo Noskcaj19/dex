@@ -16,6 +16,7 @@ use std::sync::Arc;
 use discord::utils;
 use models::application::Application;
 use models::message::MessageItem;
+use models::state::State;
 use view::terminal::Terminal;
 
 const LEFT_PADDING: usize = 20;
@@ -181,7 +182,14 @@ impl Messages {
         }
     }
 
-    pub fn render(&self, screen: &mut Terminal, size: TermSize) -> Result<(), io::Error> {
+    pub fn render(
+        &self,
+        screen: &mut Terminal,
+        size: TermSize,
+        state: Arc<Mutex<State>>,
+    ) -> Result<(), io::Error> {
+        self.set_show_sidebar(state.lock().guild_sidebar_visible);
+
         let rough_msg_count = size.height;
         let mut msgs = self.messages.borrow_mut();
         let msg_diff = msgs.len().saturating_sub(rough_msg_count as usize);

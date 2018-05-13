@@ -5,9 +5,13 @@ mod messages;
 mod terminal;
 
 use std::sync::mpsc::{self, Sender, SyncSender};
+use std::sync::Arc;
 
 use models::event::Event;
 use models::preferences::Preferences;
+use models::state::State;
+
+use serenity::prelude::Mutex;
 
 use termbuf;
 
@@ -22,10 +26,15 @@ pub struct View {
     pub terminal_size: termbuf::TermSize,
     pub indicator: indicator::Indicator,
     pub guild_list: guild_list::GuildList,
+    pub state: Arc<Mutex<State>>,
 }
 
 impl View {
-    pub fn new(preferences: &Preferences, event_channel: Sender<Event>) -> View {
+    pub fn new(
+        preferences: &Preferences,
+        event_channel: Sender<Event>,
+        state: Arc<Mutex<State>>,
+    ) -> View {
         let terminal = terminal::Terminal::new().unwrap();
         // let terminal = termbuf::TermBuf::init().unwrap();
 
@@ -48,6 +57,7 @@ impl View {
             terminal_size,
             indicator,
             guild_list,
+            state,
         }
     }
 
@@ -55,7 +65,7 @@ impl View {
         self.terminal.buf.clear()?;
 
         self.message_view
-            .render(&mut self.terminal, self.terminal_size)?;
+            .render(&mut self.terminal, self.terminal_size, self.state.clone())?;
         self.input_view
             .render(&mut self.terminal, self.terminal_size);
         self.indicator
