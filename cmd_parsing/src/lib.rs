@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate nom;
-use nom::IResult;
 use nom::{digit, rest_s};
 use std::str::FromStr;
 
@@ -91,7 +90,7 @@ named!(
 
 pub fn parse_cmd(cmd: &str) -> Option<Command> {
     match command(cmd) {
-        IResult::Done(_, cmd) => Some(cmd),
+        Ok((_, cmd)) => Some(cmd),
         _ => None,
     }
 }
