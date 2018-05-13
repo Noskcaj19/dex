@@ -72,7 +72,7 @@ impl View {
             .render(&mut self.terminal, self.terminal_size);
         if self.message_view.showing_sidebar() {
             self.guild_list
-                .render(&mut self.terminal, self.terminal_size);
+                .render(&mut self.terminal, self.terminal_size, self.state.clone());
         }
         self.terminal.buf.draw()?;
         Ok(())

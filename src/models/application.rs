@@ -40,7 +40,11 @@ pub struct Application {
 impl Application {
     pub fn new() -> Result<Application, Error> {
         let preferences = Preferences::load()?;
-        let state = State::load()?;
+        let mut state = State::load()?;
+
+        if preferences.nerd_fonts() {
+            state.char_set = ::helpers::chars::CharSet::nerd();
+        }
 
         let current_guild = state.guild;
         let current_channel = state.channel;
