@@ -220,9 +220,9 @@ impl Messages {
     ) -> Result<bool, io::Error> {
         // Show an indicator if an attachement is present
         let content = if !msg.attachments.is_empty() {
-            "📎 ".to_owned() + &msg.content_safe()
+            "📎 ".to_owned() + &msg.content
         } else {
-            msg.content_safe()
+            msg.content.to_owned()
         };
 
         let left_start = if self.showing_sidebar() {
