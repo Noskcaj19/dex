@@ -129,18 +129,20 @@ impl Application {
                 self.run_state = RunState::Exiting;
             }
             Ok(Event::NewMessage(msg)) => {
-                if !msg.is_own() {
-                    if let Err(e) = Notification::new()
-                        .summary(&msg.author.name)
-                        .body(&msg.content)
-                        .show()
-                    {
-                        self.send_err(format_err!("Error displaying notification: {}", e));
+                if Some(msg.channel_id) == self.current_channel {
+                    if !msg.is_own() {
+                        if let Err(e) = Notification::new()
+                            .summary(&msg.author.name)
+                            .body(&msg.content)
+                            .show()
+                        {
+                            self.send_err(format_err!("Error displaying notification: {}", e));
+                        }
                     }
+                    self.view
+                        .message_view
+                        .add_msg(MessageItem::DiscordMessage(msg));
                 }
-                self.view
-                    .message_view
-                    .add_msg(MessageItem::DiscordMessage(msg));
             }
             Ok(Event::MessageDelete(channel_id, message_id)) => {
                 self.view.message_view.delete_msg(channel_id, message_id)
