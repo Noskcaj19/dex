@@ -21,6 +21,8 @@ signal = "0.4.1"
 git = "https://github.com/Noskcaj19/termbuf.git"
 
 [dependencies.serenity]
+default-features = false
+features = ["builder", "cache", "client", "gateway", "http", "model", "utils"]
 git = "https://github.com/Noskcaj19/serenity.git"
 
 [dependencies.cmd_parsing]
