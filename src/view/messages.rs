@@ -247,19 +247,17 @@ impl Messages {
             if i == (lines.len() - 1) {
                 self.put_nick(&msg, screen, left_start, *y + TOP_START);
 
+                let timestamp = msg.timestamp
+                    .with_timezone(&::chrono::offset::Local)
+                    .format(&self.timestamp_fmt).to_string()
+                    + &if msg.edited_timestamp.is_some() {
+                        "*"
+                    } else {
+                        ""
+                    };
                 screen.buf.put_string(
-                    &format!(
-                        "{}{}",
-                        msg.timestamp
-                            .with_timezone(&::chrono::offset::Local)
-                            .format(&self.timestamp_fmt),
-                        if msg.edited_timestamp.is_some() {
-                            "*"
-                        } else {
-                            ""
-                        }
-                    ),
-                    size.width.saturating_sub(RIGHT_PADDING + 1),
+                    &timestamp,
+                    size.width.saturating_sub(timestamp.len()),
                     *y + TOP_START,
                 )
             }
