@@ -1,6 +1,6 @@
 use cmd_parsing::parse_cmd;
-use models::application::Application;
-use models::event::Event;
+use model::Application;
+use model::Event;
 
 pub struct CommandHandler {}
 

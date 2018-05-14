@@ -6,7 +6,7 @@ use termbuf::termion::async_stdin;
 use termbuf::termion::input::TermRead;
 use termbuf::TermBuf;
 
-use models::event::Event;
+use model::Event;
 
 use failure::Error;
 

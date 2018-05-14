@@ -4,7 +4,7 @@ use std::thread;
 use signal::trap::Trap;
 use signal::Signal::SIGWINCH;
 
-use models::event::Event;
+use model::Event;
 
 pub struct SignalHandler;
 

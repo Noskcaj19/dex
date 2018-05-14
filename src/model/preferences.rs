@@ -5,7 +5,7 @@ use std::env;
 use std::fs::OpenOptions;
 use std::io::Read;
 
-use errors::*;
+use error::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Preferences {

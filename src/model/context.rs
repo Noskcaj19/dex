@@ -4,8 +4,7 @@ use serenity::model::id::{ChannelId, GuildId};
 use serenity::model::user::CurrentUser;
 
 use helpers::chars::CharSet;
-use models::event::Event;
-use models::{preferences::Preferences, state::State};
+use model::{Event, Preferences, State};
 
 use failure::Error;
 

@@ -15,9 +15,7 @@ use std::io;
 use std::sync::Arc;
 
 use discord::utils;
-use models::application::Application;
-use models::context::Context;
-use models::message::MessageItem;
+use model::{Application, Context, MessageItem};
 use view::terminal::Terminal;
 
 const LEFT_PADDING: usize = 20;

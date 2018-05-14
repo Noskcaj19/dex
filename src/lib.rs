@@ -7,7 +7,6 @@ extern crate serde_derive;
 extern crate chrono;
 extern crate serenity;
 extern crate termbuf;
-// extern crate termion;
 extern crate toml;
 #[macro_use]
 extern crate log;
@@ -16,12 +15,12 @@ extern crate notify_rust;
 extern crate signal;
 extern crate textwrap;
 
-mod commands;
+mod command;
 mod discord;
-mod errors;
+mod error;
 mod helpers;
-mod models;
+mod model;
 mod view;
 
 pub use failure::Error;
-pub use models::application::Application;
+pub use model::Application;

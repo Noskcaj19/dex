@@ -1,4 +1,4 @@
-use models::event::Event;
+use model::Event;
 use view::terminal::Terminal;
 
 use std::sync::mpsc::Sender;

@@ -3,7 +3,7 @@ use std::sync::{mpsc, Arc};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 
-use models::event::Event::{self, *};
+use model::Event::{self, *};
 
 pub struct Handler(pub Arc<Mutex<mpsc::Sender<Event>>>);
 

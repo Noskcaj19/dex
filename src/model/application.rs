@@ -6,14 +6,11 @@ use serenity::CACHE;
 use std::sync::mpsc::{self, Receiver};
 use std::sync::Arc;
 
-use super::event::Event;
-use super::preferences::Preferences;
-use commands::CommandHandler;
+use command::CommandHandler;
 use discord::DiscordClient;
-use helpers::signals::SignalHandler;
-use models::context::Context;
-use models::message::MessageItem;
-use models::state::State as SavedState;
+use helpers::signal::SignalHandler;
+use model::State as SavedState;
+use model::{Context, Event, MessageItem, Preferences};
 use view::View;
 
 enum State {

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use models::event::Event;
+use model::Event;
 
 use serenity::model::event::TypingStartEvent;
 use serenity::model::id::UserId;

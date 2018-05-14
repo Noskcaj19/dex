@@ -7,7 +7,7 @@ mod terminal;
 use std::sync::mpsc::{self, SyncSender};
 use std::sync::Arc;
 
-use models::context::Context;
+use model::Context;
 
 use serenity::prelude::RwLock;
 

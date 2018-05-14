@@ -8,9 +8,9 @@ use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::*;
 use serenity::Client;
 
-use models::context::Context;
+use model::Context;
 
-use errors;
+use error;
 use failure::Error;
 
 pub struct DiscordClient {
@@ -24,7 +24,7 @@ impl DiscordClient {
 
         let mut client = match Client::new(&context.read().token, handler) {
             Ok(client) => client,
-            Err(err) => return Err(errors::InternalSerenityError::from(err))?,
+            Err(err) => return Err(error::InternalSerenityError::from(err))?,
         };
 
         let shard_manager = client.shard_manager.clone();

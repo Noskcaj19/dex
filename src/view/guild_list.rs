@@ -1,4 +1,4 @@
-use models::context::Context;
+use model::Context;
 use view::terminal::Terminal;
 
 use std::collections::HashMap;

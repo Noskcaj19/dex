@@ -7,7 +7,7 @@ use std::env;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 
-use errors::*;
+use error::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct State {
