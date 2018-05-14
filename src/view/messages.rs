@@ -2,6 +2,7 @@ use serenity::model::channel;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::id::{ChannelId, MessageId, UserId};
 use serenity::prelude::Mutex;
+use serenity::prelude::RwLock;
 use serenity::utils::Colour;
 use termbuf::Color;
 use termbuf::TermSize;
@@ -15,8 +16,8 @@ use std::sync::Arc;
 
 use discord::utils;
 use models::application::Application;
+use models::context::Context;
 use models::message::MessageItem;
-use models::state::State;
 use view::terminal::Terminal;
 
 const LEFT_PADDING: usize = 20;
@@ -123,7 +124,7 @@ impl Messages {
 
         let num = app.view.terminal_size.height;
         let retriever = GetMessages::default().limit(num as u64);
-        if let Some(channel) = app.current_channel {
+        if let Some(channel) = app.context.read().channel {
             self.messages.borrow_mut().clear();
 
             for message in channel
@@ -186,9 +187,9 @@ impl Messages {
         &self,
         screen: &mut Terminal,
         size: TermSize,
-        state: Arc<Mutex<State>>,
+        context: &Arc<RwLock<Context>>,
     ) -> Result<(), io::Error> {
-        self.set_show_sidebar(state.lock().guild_sidebar_visible);
+        self.set_show_sidebar(context.read().guild_sidebar_visible);
 
         let rough_msg_count = size.height;
         let mut msgs = self.messages.borrow_mut();

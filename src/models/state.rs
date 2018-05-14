@@ -8,7 +8,6 @@ use std::fs::OpenOptions;
 use std::io::{Read, Write};
 
 use errors::*;
-use helpers::chars::CharSet;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct State {
@@ -16,17 +15,10 @@ pub struct State {
     pub channel: Option<ChannelId>,
     #[serde(default = "_true")]
     pub guild_sidebar_visible: bool,
-    #[serde(default = "_unicode")]
-    #[serde(skip)]
-    pub char_set: CharSet,
 }
 
 fn _true() -> bool {
     true
-}
-
-fn _unicode() -> CharSet {
-    CharSet::unicode()
 }
 
 impl State {

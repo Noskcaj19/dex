@@ -10,8 +10,8 @@ use errors::*;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Preferences {
     pub token: String,
-    timestamp_fmt: Option<String>,
-    nerd_fonts: Option<bool>,
+    pub timestamp_fmt: Option<String>,
+    pub nerd_fonts: Option<bool>,
 }
 
 impl Preferences {

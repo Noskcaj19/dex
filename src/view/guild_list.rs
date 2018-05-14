@@ -1,4 +1,4 @@
-use models::state::State;
+use models::context::Context;
 use view::terminal::Terminal;
 
 use std::collections::HashMap;
@@ -76,7 +76,7 @@ impl GuildList {
         self.guild_list.clear();
 
         if let Ok(guilds) = user.guilds() {
-            for guild in guilds.into_iter() {
+            for guild in guilds {
                 if let Some(full_guild) = guild.id.find() {
                     let mut guild = GuildEntry::new(full_guild.clone());
 
@@ -125,18 +125,15 @@ impl GuildList {
         }
     }
 
-    pub fn render(&self, screen: &mut Terminal, size: TermSize, state: Arc<Mutex<State>>) {
+    pub fn render(&self, screen: &mut Terminal, size: TermSize, context: &Arc<RwLock<Context>>) {
         let mut y = 0;
         for guild in &self.guild_list {
             screen
                 .buf
                 .put_string_with(
-                    &format!(
-                        "{}",
-                        truncate(
-                            guild.guild.read().name.clone(),
-                            MAX_LEN.saturating_sub(LEFT_START + 2)
-                        )
+                    &truncate(
+                        guild.guild.read().name.clone(),
+                        MAX_LEN.saturating_sub(LEFT_START + 2),
                     ),
                     LEFT_START,
                     TOP_START + y,
@@ -150,12 +147,9 @@ impl GuildList {
 
             for category in &categories {
                 screen.buf.put_string(
-                    &format!(
-                        "{}",
-                        truncate(
-                            category.category.read().name.clone(),
-                            MAX_LEN.saturating_sub(LEFT_START + 4)
-                        )
+                    &truncate(
+                        category.category.read().name.clone(),
+                        MAX_LEN.saturating_sub(LEFT_START + 4),
                     ),
                     LEFT_START + 2,
                     TOP_START + y,
@@ -166,7 +160,7 @@ impl GuildList {
                     let mut text =
                         truncate(channel.name.clone(), MAX_LEN.saturating_sub(LEFT_START + 7));
                     if let ChannelType::Voice = channel.kind {
-                        text = format!("{} {}", state.lock().char_set.volume_off(), text);
+                        text = format!("{} {}", context.read().char_set.volume_off(), text);
                     }
                     screen.buf.put_string(&text, LEFT_START + 5, TOP_START + y);
                     y += 1;
@@ -174,12 +168,9 @@ impl GuildList {
             }
             for misc in &guild.misc {
                 screen.buf.put_string(
-                    &format!(
-                        "{}",
-                        truncate(
-                            misc.read().name.clone(),
-                            MAX_LEN.saturating_sub(LEFT_START + 4)
-                        )
+                    &truncate(
+                        misc.read().name.clone(),
+                        MAX_LEN.saturating_sub(LEFT_START + 4),
                     ),
                     LEFT_START + 2,
                     TOP_START + y,

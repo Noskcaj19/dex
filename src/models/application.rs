@@ -1,11 +1,9 @@
 use failure::Error;
 use notify_rust::Notification;
-use serenity::model::id::{ChannelId, GuildId};
-use serenity::model::user::CurrentUser;
-use serenity::prelude::Mutex;
+use serenity::prelude::RwLock;
 use serenity::CACHE;
 
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc::{self, Receiver};
 use std::sync::Arc;
 
 use super::event::Event;
@@ -13,11 +11,12 @@ use super::preferences::Preferences;
 use commands::CommandHandler;
 use discord::DiscordClient;
 use helpers::signals::SignalHandler;
+use models::context::Context;
 use models::message::MessageItem;
-use models::state::State;
+use models::state::State as SavedState;
 use view::View;
 
-enum RunState {
+enum State {
     NotReady,
     Ready,
     Exiting,
@@ -26,52 +25,41 @@ enum RunState {
 pub struct Application {
     pub view: View,
     pub discord_client: DiscordClient,
-    pub preferences: Preferences,
-    pub state: Arc<Mutex<State>>,
-    pub current_guild: Option<GuildId>,
-    pub current_channel: Option<ChannelId>,
-    pub event_channel: Sender<Event>,
-    pub current_user: Option<CurrentUser>,
+    pub context: Arc<RwLock<Context>>,
     pub command_handler: CommandHandler,
-    run_state: RunState,
+    state: State,
     events: Receiver<Event>,
 }
 
 impl Application {
     pub fn new() -> Result<Application, Error> {
         let preferences = Preferences::load()?;
-        let mut state = State::load()?;
+        let state = SavedState::load()?;
 
-        if preferences.nerd_fonts() {
-            state.char_set = ::helpers::chars::CharSet::nerd();
-        }
-
-        let current_guild = state.guild;
-        let current_channel = state.channel;
-
-        let state = Arc::new(Mutex::new(state));
+        let state = state;
 
         let (event_channel, events) = mpsc::channel();
 
         SignalHandler::start(event_channel.clone());
 
-        let view = View::new(&preferences.clone(), event_channel.clone(), state.clone());
+        let context = Arc::new(RwLock::new(Context::new(
+            &preferences,
+            &state,
+            event_channel,
+        )));
 
-        let command_handler = CommandHandler::new(event_channel.clone(), state.clone());
+        let view = View::new(&context.clone());
 
-        let discord_client = DiscordClient::start(&preferences.token, event_channel.clone())?;
+        let command_handler = CommandHandler::new();
+
+        let discord_client = DiscordClient::start(&context.clone())?;
 
         Ok(Application {
             view,
             discord_client,
-            current_guild,
-            current_channel,
-            preferences,
-            state,
-            event_channel,
+            context,
             command_handler,
-            current_user: None,
-            run_state: RunState::NotReady,
+            state: State::NotReady,
             events,
         })
     }
@@ -80,15 +68,15 @@ impl Application {
         self.view.message_view.load_messages(self);
 
         loop {
-            match self.run_state {
-                RunState::NotReady => {}
-                RunState::Ready => {
+            match self.state {
+                State::NotReady => {}
+                State::Ready => {
                     self.view.present()?;
                 }
-                RunState::Exiting => {
+                State::Exiting => {
                     debug!("Exiting event loop");
                     trace!("Saving state...");
-                    self.state.lock().save()?;
+                    self.context.read().save_state()?;
                     debug!("Saved state");
                     break;
                 }
@@ -108,15 +96,15 @@ impl Application {
             }
             Ok(Event::DiscordReady) => {
                 debug!("Discord ready");
-                self.current_user = Some(CACHE.read().user.clone());
-                self.run_state = RunState::Ready;
+                self.context.write().current_user = Some(CACHE.read().user.clone());
+                self.state = State::Ready;
 
                 self.view.guild_list.populate_guild_list();
             }
             Ok(Event::Keypress(key)) => match key {
                 Key::Ctrl('c') | Key::Ctrl('d') => {
                     self.discord_client.shutdown();
-                    self.run_state = RunState::Exiting;
+                    self.state = State::Exiting;
                 }
                 key => {
                     if let Err(err) = self.view.input_view.key_press(key) {
@@ -126,10 +114,10 @@ impl Application {
             },
             Ok(Event::ShutdownAll) => {
                 self.discord_client.shutdown();
-                self.run_state = RunState::Exiting;
+                self.state = State::Exiting;
             }
             Ok(Event::NewMessage(msg)) => {
-                if Some(msg.channel_id) == self.current_channel {
+                if Some(msg.channel_id) == self.context.read().channel {
                     if !msg.is_own() {
                         if let Err(e) = Notification::new()
                             .summary(&msg.author.name)
@@ -153,7 +141,9 @@ impl Application {
             Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(*update),
             Ok(Event::ChannelUpdateEvent) => self.view.guild_list.populate_guild_list(),
             Ok(Event::UserMessage(msg)) => {
-                if self.current_channel
+                if self.context
+                    .read()
+                    .channel
                     .map(|channel| channel.say(msg))
                     .is_none()
                 {
@@ -161,13 +151,12 @@ impl Application {
                 }
             }
             Ok(Event::SetChannel(new_chan)) => {
-                self.current_channel = Some(new_chan);
-                self.state.lock().channel = Some(new_chan);
+                self.context.write().channel = Some(new_chan);
                 self.view.message_view.load_messages(self);
             }
             Ok(Event::UserCommand(cmd)) => self.command_handler.execute(self, &cmd),
             Ok(Event::UserTyping) => {
-                if let Some(channel) = self.current_channel {
+                if let Some(channel) = self.context.read().channel {
                     if let Err(err) = channel.broadcast_typing() {
                         self.send_err(format_err!("Error broadcasting typing status: {}", err));
                     }
@@ -184,6 +173,10 @@ impl Application {
     }
 
     fn send_err(&self, err: Error) {
-        self.event_channel.send(Event::InternalError(err)).unwrap()
+        self.context
+            .read()
+            .event_channel
+            .send(Event::InternalError(err))
+            .unwrap()
     }
 }

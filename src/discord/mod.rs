@@ -1,7 +1,6 @@
 mod event_handler;
 pub mod utils;
 
-use std::sync::mpsc::Sender;
 use std::sync::Arc;
 use std::thread;
 
@@ -9,7 +8,7 @@ use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::*;
 use serenity::Client;
 
-use models::event::Event;
+use models::context::Context;
 
 use errors;
 use failure::Error;
@@ -19,10 +18,11 @@ pub struct DiscordClient {
 }
 
 impl DiscordClient {
-    pub fn start(token: &str, event_channel: Sender<Event>) -> Result<DiscordClient, Error> {
-        let handler = event_handler::Handler(Arc::new(Mutex::new(event_channel)));
+    pub fn start(context: &Arc<RwLock<Context>>) -> Result<DiscordClient, Error> {
+        let handler =
+            event_handler::Handler(Arc::new(Mutex::new(context.read().event_channel.clone())));
 
-        let mut client = match Client::new(token, handler) {
+        let mut client = match Client::new(&context.read().token, handler) {
             Ok(client) => client,
             Err(err) => return Err(errors::InternalSerenityError::from(err))?,
         };
