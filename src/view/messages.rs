@@ -249,15 +249,17 @@ impl Messages {
 
                 let timestamp = msg.timestamp
                     .with_timezone(&::chrono::offset::Local)
-                    .format(&self.timestamp_fmt).to_string()
-                    + &if msg.edited_timestamp.is_some() {
-                        "*"
-                    } else {
-                        ""
-                    };
+                    .format(&self.timestamp_fmt)
+                    .to_string();
+                let timestamp_len = timestamp.len();
+                let timestamp = timestamp + &if msg.edited_timestamp.is_some() {
+                    "*"
+                } else {
+                    ""
+                };
                 screen.buf.put_string(
                     &timestamp,
-                    size.width.saturating_sub(timestamp.len()),
+                    size.width.saturating_sub(timestamp_len + 1),
                     *y + TOP_START,
                 )
             }
