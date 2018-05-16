@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate nom;
 use nom::{digit, rest_s};
 use std::str::FromStr;
 
