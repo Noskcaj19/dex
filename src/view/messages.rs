@@ -164,13 +164,13 @@ impl Messages {
                 if self.truecolor {
                     screen
                         .buf
-                        .put_string_with(nick, x, y)
+                        .string_builder(nick, x, y)
                         .fg(Color::Rgb(colour.r(), colour.g(), colour.b()))
                         .build();
                 } else {
                     screen
                         .buf
-                        .put_string_with(nick, x, y)
+                        .string_builder(nick, x, y)
                         .fg(color_to_8bit(*colour))
                         .build();
                 }
@@ -247,7 +247,8 @@ impl Messages {
             if i == (lines.len() - 1) {
                 self.put_nick(&msg, screen, left_start, *y + TOP_START);
 
-                let timestamp = msg.timestamp
+                let timestamp = msg
+                    .timestamp
                     .with_timezone(&::chrono::offset::Local)
                     .format(&self.timestamp_fmt)
                     .to_string();

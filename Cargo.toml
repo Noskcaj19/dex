@@ -25,5 +25,5 @@ default-features = false
 features = ["builder", "cache", "client", "gateway", "http", "model", "utils"]
 git = "https://github.com/Noskcaj19/serenity.git"
 
-[dependencies.cmd_parsing]
-path = "cmd_parsing"
+[dependencies.parsing]
+path = "parsing"

@@ -34,10 +34,10 @@ impl Input {
     }
 
     pub fn render(&self, screen: &mut Terminal, size: TermSize) {
-        trace!("Current buffer: {}", self.text);
         let saturated_side = (size.width as usize).saturating_sub(SIDE_PADDING * 2);
         let clipped_text = if self.text.len() > saturated_side {
-            let clip = self.text
+            let clip = self
+                .text
                 .chars()
                 .skip(
                     self.text
@@ -65,8 +65,8 @@ impl Input {
         );
 
         screen.buf.set_cursor_position(
-            1 + SIDE_PADDING + clipped_text.len(),
-            size.height.saturating_sub(BOTTOM_START),
+            SIDE_PADDING + clipped_text.len() + 1,
+            size.height.saturating_sub(BOTTOM_START) + 1,
         );
     }
 

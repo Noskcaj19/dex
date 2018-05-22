@@ -130,7 +130,7 @@ impl GuildList {
         for guild in &self.guild_list {
             screen
                 .buf
-                .put_string_with(
+                .string_builder(
                     &truncate(
                         guild.guild.read().name.clone(),
                         MAX_LEN.saturating_sub(LEFT_START + 2),
@@ -181,6 +181,6 @@ impl GuildList {
 
         screen
             .buf
-            .draw_vertical_line(MAX_LEN - 1, 2, size.height.saturating_sub(7))
+            .draw_vertical_line(MAX_LEN - 1, 1, size.height.saturating_sub(6))
     }
 }

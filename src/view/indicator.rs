@@ -15,7 +15,7 @@ use serenity::model::id::UserId;
 use serenity::model::user::User;
 use termbuf::TermSize;
 
-const BOTTOM_START: usize = 1;
+const BOTTOM_START: usize = 2;
 const SIDE_PADDING: usize = 3;
 
 pub struct Indicator {
@@ -82,7 +82,8 @@ impl Indicator {
     }
 
     pub fn render(&self, screen: &mut Terminal, size: TermSize) {
-        let text = self.events
+        let text = self
+            .events
             .lock()
             .iter()
             .filter_map(|e| self.fetch_user_name(e.user_id))

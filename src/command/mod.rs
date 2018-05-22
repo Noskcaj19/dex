@@ -1,6 +1,6 @@
-use cmd_parsing::parse_cmd;
 use model::Application;
 use model::Event;
+use parsing::parse_cmd;
 
 pub struct CommandHandler {}
 
@@ -15,7 +15,8 @@ impl CommandHandler {
         if let Some(cmd) = parse_cmd(cmd) {
             let split_cmd: Vec<_> = cmd.command.split_whitespace().collect();
             match split_cmd.get(0).cloned().unwrap_or_default() {
-                "quit" | "q" => app.context
+                "quit" | "q" => app
+                    .context
                     .read()
                     .event_channel
                     .send(Event::ShutdownAll)
