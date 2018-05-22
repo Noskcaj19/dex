@@ -5,6 +5,7 @@ use serenity::prelude::Mutex;
 use serenity::prelude::RwLock;
 use serenity::utils::Colour;
 use termbuf::Color;
+use termbuf::Style;
 use termbuf::TermSize;
 use textwrap::fill;
 
@@ -245,8 +246,6 @@ impl Messages {
         let lines: Vec<_> = msg.content.lines().rev().collect();
         for (i, line) in lines.iter().enumerate() {
             if i == (lines.len() - 1) {
-                self.put_nick(&msg, screen, left_start, *y + TOP_START);
-
                 let timestamp = msg
                     .timestamp
                     .with_timezone(&::chrono::offset::Local)
@@ -258,11 +257,12 @@ impl Messages {
                 } else {
                     ""
                 };
-                screen.buf.put_string(
-                    &timestamp,
-                    size.width.saturating_sub(timestamp_len + 1),
-                    *y + TOP_START,
-                )
+                self.put_nick(&msg, screen, left_start + timestamp_len + 1, *y + TOP_START);
+                screen
+                    .buf
+                    .string_builder(&timestamp, left_start.saturating_sub(2), *y + TOP_START)
+                    .style(Style::Faint)
+                    .build();
             }
             screen
                 .buf
