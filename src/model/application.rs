@@ -132,13 +132,15 @@ impl Application {
             Ok(Event::MessageDelete(channel_id, message_id)) => {
                 self.view.message_view.delete_msg(channel_id, message_id)
             }
-            Ok(Event::MessageDeleteBulk(channel_id, message_ids)) => self.view
+            Ok(Event::MessageDeleteBulk(channel_id, message_ids)) => self
+                .view
                 .message_view
                 .delete_msg_bulk(channel_id, &message_ids),
             Ok(Event::MessageUpdateEvent(update)) => self.view.message_view.update_message(*update),
             Ok(Event::ChannelUpdateEvent) => self.view.guild_list.populate_guild_list(),
             Ok(Event::UserMessage(msg)) => {
-                if self.context
+                if self
+                    .context
                     .read()
                     .channel
                     .map(|channel| channel.say(msg))

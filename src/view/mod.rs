@@ -78,7 +78,8 @@ impl View {
     }
 
     pub fn update_size(&mut self) {
-        self.terminal_size = self.terminal
+        self.terminal_size = self
+            .terminal
             .buf
             .size()
             .expect("Unable to get terminal size");
