@@ -127,7 +127,11 @@ impl GuildList {
 
     pub fn render(&self, screen: &mut Terminal, size: TermSize, context: &Arc<RwLock<Context>>) {
         let mut y = 0;
+        let max_y = size.height.saturating_sub(7);
         for guild in &self.guild_list {
+            if y >= max_y {
+                break;
+            }
             screen
                 .buf
                 .string_builder(
@@ -146,6 +150,9 @@ impl GuildList {
             categories.sort_by_key(|entry| entry.category.read().position);
 
             for category in &categories {
+                if y >= max_y {
+                    break;
+                }
                 screen.buf.put_string(
                     &truncate(
                         category.category.read().name.clone(),
@@ -156,6 +163,9 @@ impl GuildList {
                 );
                 y += 1;
                 for channel in &category.channels {
+                    if y >= max_y {
+                        break;
+                    }
                     let channel = channel.read();
                     let mut text =
                         truncate(channel.name.clone(), MAX_LEN.saturating_sub(LEFT_START + 7));
@@ -167,6 +177,9 @@ impl GuildList {
                 }
             }
             for misc in &guild.misc {
+                if y >= max_y {
+                    break;
+                }
                 screen.buf.put_string(
                     &truncate(
                         misc.read().name.clone(),
