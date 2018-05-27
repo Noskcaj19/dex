@@ -7,7 +7,7 @@ use std::sync::Arc;
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::CACHE;
-use termbuf::Style::Bold;
+use termbuf::Style;
 use termbuf::TermSize;
 
 const TOP_START: usize = 2;
@@ -142,7 +142,7 @@ impl GuildList {
                     LEFT_START,
                     TOP_START + y,
                 )
-                .style(Bold)
+                .style(Style::Bold)
                 .build();
             y += 1;
 

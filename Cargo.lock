@@ -168,7 +168,7 @@ dependencies = [
  "serde_derive 1.0.59 (registry+https://github.com/rust-lang/crates.io-index)",
  "serenity 0.5.2 (git+https://github.com/Noskcaj19/serenity.git)",
  "signal 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "termbuf 1.3.3 (git+https://github.com/Noskcaj19/termbuf.git)",
+ "termbuf 1.5.1 (git+https://github.com/Noskcaj19/termbuf.git)",
  "termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "textwrap 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -909,9 +909,10 @@ dependencies = [
 
 [[package]]
 name = "termbuf"
-version = "1.3.3"
-source = "git+https://github.com/Noskcaj19/termbuf.git#07a3706e1a8f90d65ebdfd8c702455f32b7dd897"
+version = "1.5.1"
+source = "git+https://github.com/Noskcaj19/termbuf.git#f1e4e4a900aac48467f52045c9383a846ee05b84"
 dependencies = [
+ "bitflags 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-width 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1228,7 +1229,7 @@ dependencies = [
 "checksum synom 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a393066ed9010ebaed60b9eafa373d4b1baac186dd7e008555b0f702b51945b6"
 "checksum synstructure 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3a761d12e6d8dcb4dcf952a7a89b475e3a9d69e4a69307e01a470977642914bd"
 "checksum tempdir 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)" = "15f2b5fb00ccdf689e0149d1b1b3c03fead81c2b37735d812fa8bddbbf41b6d8"
-"checksum termbuf 1.3.3 (git+https://github.com/Noskcaj19/termbuf.git)" = "<none>"
+"checksum termbuf 1.5.1 (git+https://github.com/Noskcaj19/termbuf.git)" = "<none>"
 "checksum termcolor 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "adc4587ead41bf016f11af03e55a624c06568b5a19db4e90fde573d805074f83"
 "checksum termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "689a3bdfaab439fd92bc87df5c4c78417d3cbe537487274e9b0b2dce76e92096"
 "checksum textwrap 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "307686869c93e71f94da64286f9a9524c0f308a9e1c87a583de8e9c9039ad3f6"
