@@ -128,6 +128,7 @@ impl GuildList {
     pub fn render(&self, screen: &mut Terminal, size: TermSize, context: &Arc<RwLock<Context>>) {
         let mut y = 0;
         let max_y = size.height.saturating_sub(7);
+        let current_channel = context.read().channel;
         for guild in &self.guild_list {
             if y >= max_y {
                 break;
@@ -172,7 +173,15 @@ impl GuildList {
                     if let ChannelType::Voice = channel.kind {
                         text = format!("{} {}", context.read().char_set.volume_off(), text);
                     }
-                    screen.buf.put_string(&text, LEFT_START + 5, TOP_START + y);
+                    if Some(channel.id) == current_channel {
+                        screen
+                            .buf
+                            .string_builder(&text, LEFT_START + 5, TOP_START + y)
+                            .style(Style::Bold)
+                            .build();
+                    } else {
+                        screen.buf.put_string(&text, LEFT_START + 5, TOP_START + y);
+                    }
                     y += 1;
                 }
             }
