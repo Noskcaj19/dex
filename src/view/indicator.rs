@@ -15,7 +15,7 @@ use serenity::model::id::UserId;
 use serenity::model::user::User;
 use termbuf::TermSize;
 
-const BOTTOM_START: usize = 2;
+const BOTTOM_START: usize = 1;
 const SIDE_PADDING: usize = 3;
 
 pub struct Indicator {
