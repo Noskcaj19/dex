@@ -66,7 +66,9 @@ impl Application {
 
         loop {
             match self.state {
-                State::NotReady => {}
+                State::NotReady => {
+                    println!("Loading...");
+                }
                 State::Ready => {
                     self.view.present()?;
                 }
