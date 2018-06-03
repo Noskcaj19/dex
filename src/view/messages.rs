@@ -207,7 +207,7 @@ impl Messages {
         for mut msg in messages.iter_mut().rev() {
             match msg {
                 MessageItem::DiscordMessage(msg) => {
-                    if !self.render_discord_msg(msg, size, screen, &mut y)? {
+                    if !self.render_discord_msg(msg, &mut y, size, screen, context)? {
                         break;
                     };
                 }
@@ -219,13 +219,14 @@ impl Messages {
     fn render_discord_msg(
         &self,
         msg: &mut channel::Message,
+        y: &mut usize,
         size: TermSize,
         screen: &mut Terminal,
-        y: &mut usize,
+        context: &Arc<RwLock<Context>>,
     ) -> Result<bool, io::Error> {
         // Show an indicator if an attachement is present
         let content = if !msg.attachments.is_empty() {
-            "📎 ".to_owned() + &msg.content
+            format!("{} {}", context.read().char_set.paper_clip(), msg.content)
         } else {
             msg.content.to_owned()
         };
