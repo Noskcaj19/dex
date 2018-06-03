@@ -36,6 +36,7 @@ fn color_to_8bit(colour: ::serenity::utils::Colour) -> Color {
 
 pub struct Messages {
     pub messages: RefCell<Vec<MessageItem>>,
+    max_name_len: RefCell<usize>,
     timestamp_fmt: String,
     truecolor: bool,
     nickname_cache: RefCell<HashMap<UserId, (String, Option<Colour>)>>,
@@ -51,6 +52,7 @@ impl Messages {
 
         Messages {
             messages: RefCell::new(Vec::new()),
+            max_name_len: RefCell::new(0),
             timestamp_fmt,
             truecolor,
             nickname_cache: RefCell::new(HashMap::new()),
@@ -160,6 +162,9 @@ impl Messages {
             }
         };
 
+        if nick.len() > *self.max_name_len.borrow() {
+            *self.max_name_len.borrow_mut() = nick.len();
+        }
         match colour {
             Some(colour) => {
                 if self.truecolor {
@@ -177,7 +182,7 @@ impl Messages {
                 }
             }
             None => {
-                screen.buf.put_string(&message.author.name, x, y);
+                screen.buf.put_string(&nick, x, y);
             }
         }
     }
@@ -264,9 +269,11 @@ impl Messages {
                     .style(Style::Faint)
                     .build();
             }
-            screen
-                .buf
-                .put_string(line, LEFT_PADDING + left_start, *y + TOP_START);
+            screen.buf.put_string(
+                line,
+                10 + left_start + *self.max_name_len.borrow(),
+                *y + TOP_START,
+            );
             if *y == 0 {
                 return Ok(false);
             }
