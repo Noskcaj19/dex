@@ -3,6 +3,7 @@ import sqlite3
 
 
 def main():
+    print("Searching for Discord localstorage databases...")
     output = subprocess.Popen(
         ["find ~/ -name https*.discordapp.com_0.localstorage"],
         shell=True,
