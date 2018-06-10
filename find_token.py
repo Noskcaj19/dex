@@ -4,11 +4,14 @@ import sqlite3
 
 def main():
     print("Searching for Discord localstorage databases...")
+    try:
+        subprocess.check_output(["rg", "--version"])
+        command = "rg ~/ --files -g https*.discordapp.com_0.localstorage"
+    except FileNotFoundError:
+        command = "find ~/ -name https*.discordapp.com_0.localstorage"
+
     output = subprocess.Popen(
-        ["find ~/ -name https*.discordapp.com_0.localstorage"],
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        [command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
     )
     results = output.communicate()[0].decode().splitlines()
 
