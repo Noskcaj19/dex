@@ -58,10 +58,10 @@ impl Input {
             1,
         );
 
-        screen.buf.put_string(
-            &clipped_text,
+        screen.buf.print(
             SIDE_PADDING,
             size.height.saturating_sub(BOTTOM_START),
+            &clipped_text,
         );
 
         screen.buf.set_cursor_position(

@@ -73,7 +73,7 @@ impl View {
                 &self.context.clone(),
             );
         }
-        self.terminal.buf.draw()?;
+        self.terminal.buf.flush()?;
         Ok(())
     }
 

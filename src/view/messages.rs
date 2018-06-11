@@ -170,19 +170,19 @@ impl Messages {
                 if self.truecolor {
                     screen
                         .buf
-                        .string_builder(nick, x, y)
+                        .string_builder(x, y, nick)
                         .fg(Color::Rgb(colour.r(), colour.g(), colour.b()))
-                        .build();
+                        .draw();
                 } else {
                     screen
                         .buf
-                        .string_builder(nick, x, y)
+                        .string_builder(x, y, nick)
                         .fg(color_to_8bit(*colour))
-                        .build();
+                        .draw();
                 }
             }
             None => {
-                screen.buf.put_string(&nick, x, y);
+                screen.buf.print(x, y, &nick);
             }
         }
     }
@@ -266,14 +266,14 @@ impl Messages {
                 self.put_nick(&msg, screen, left_start + timestamp_len + 1, *y + TOP_START);
                 screen
                     .buf
-                    .string_builder(&timestamp, left_start.saturating_sub(2), *y + TOP_START)
+                    .string_builder(left_start.saturating_sub(2), *y + TOP_START, &timestamp)
                     .style(Style::Faint)
-                    .build();
+                    .draw();
             }
-            screen.buf.put_string(
-                line,
+            screen.buf.print(
                 10 + left_start + *self.max_name_len.borrow(),
                 *y + TOP_START,
+                line,
             );
             if *y == 0 {
                 return Ok(false);

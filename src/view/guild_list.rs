@@ -136,15 +136,15 @@ impl GuildList {
             screen
                 .buf
                 .string_builder(
+                    LEFT_START,
+                    TOP_START + y,
                     &truncate(
                         guild.guild.read().name.clone(),
                         MAX_LEN.saturating_sub(LEFT_START + 2),
                     ),
-                    LEFT_START,
-                    TOP_START + y,
                 )
                 .style(Style::Bold)
-                .build();
+                .draw();
             y += 1;
 
             let mut categories = guild.categories.values().collect::<Vec<_>>();
@@ -154,13 +154,13 @@ impl GuildList {
                 if y >= max_y {
                     break;
                 }
-                screen.buf.put_string(
+                screen.buf.print(
+                    LEFT_START + 2,
+                    TOP_START + y,
                     &truncate(
                         category.category.read().name.clone(),
                         MAX_LEN.saturating_sub(LEFT_START + 4),
                     ),
-                    LEFT_START + 2,
-                    TOP_START + y,
                 );
                 y += 1;
                 for channel in &category.channels {
@@ -176,11 +176,11 @@ impl GuildList {
                     if Some(channel.id) == current_channel {
                         screen
                             .buf
-                            .string_builder(&text, LEFT_START + 5, TOP_START + y)
+                            .string_builder(LEFT_START + 5, TOP_START + y, &text)
                             .style(Style::Bold)
-                            .build();
+                            .draw();
                     } else {
-                        screen.buf.put_string(&text, LEFT_START + 5, TOP_START + y);
+                        screen.buf.print(LEFT_START + 5, TOP_START + y, &text);
                     }
                     y += 1;
                 }
@@ -189,13 +189,13 @@ impl GuildList {
                 if y >= max_y {
                     break;
                 }
-                screen.buf.put_string(
+                screen.buf.print(
+                    LEFT_START + 2,
+                    TOP_START + y,
                     &truncate(
                         misc.read().name.clone(),
                         MAX_LEN.saturating_sub(LEFT_START + 4),
                     ),
-                    LEFT_START + 2,
-                    TOP_START + y,
                 );
                 y += 1;
             }

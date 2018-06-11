@@ -89,10 +89,10 @@ impl Indicator {
             .filter_map(|e| self.fetch_user_name(e.user_id))
             .collect::<Vec<_>>()
             .join(", ");
-        screen.buf.put_string(
-            &text,
+        screen.buf.print(
             size.width.saturating_sub(SIDE_PADDING + 1 + text.len()),
             size.height - BOTTOM_START,
+            &text,
         );
     }
 }
